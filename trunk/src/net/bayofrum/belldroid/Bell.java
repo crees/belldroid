@@ -79,7 +79,6 @@ public class Bell extends TextView {
 			stroke = Stroke.hand;
 			break;
 		}
-		setText(String.valueOf(this.bellNumber) + String.valueOf(place));
 
 		// Bong!
 		soundPool.play(soundId, 0.99f, 0.99f, 1, 0, 1.0f);

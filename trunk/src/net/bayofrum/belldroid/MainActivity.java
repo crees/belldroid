@@ -22,7 +22,7 @@ import android.widget.TextView;
 
 public class MainActivity extends Activity {
 	
-	private TextView debug;
+//	private TextView debug;
 
 	/* If increased, please check that there is a Layout for the numbers! */
 	private static final int maxNumberOfBells = 12;
@@ -98,7 +98,7 @@ public class MainActivity extends Activity {
 						// DO_NADA-- can't happen
 					}
 		});
-		debug = (TextView)findViewById(R.id.debug);
+//		debug = (TextView)findViewById(R.id.debug);
 
 	}
 
@@ -334,7 +334,7 @@ public class MainActivity extends Activity {
 		Pattern expression = Pattern.compile("^[0-9]+");
 		Matcher matcher = expression.matcher(method.substring(methodPosition));
 		matcher.find();
-		debug.setText(String.valueOf(matcher.end()));
+//		debug.setText(String.valueOf(matcher.end()));
 		methodPosition += matcher.end();
 		for (char c : matcher.group().toCharArray())
 				exceptions.add(c - '0');					
