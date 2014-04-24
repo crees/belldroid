@@ -48,6 +48,10 @@ public class Bell extends TextView {
 
 	}
 	
+	public int getNumber() {
+		return this.bellNumber;
+	}
+	
 	public int getPlace() {
 		return this.place;
 	}
@@ -56,8 +60,12 @@ public class Bell extends TextView {
 		this.place = p;
 	}
 	
-	public Stroke getStroke() {
-		return this.stroke;
+	public Boolean atHandStroke() {
+		return this.stroke == Stroke.hand;
+	}
+	
+	public Boolean atBackStroke() {
+		return this.stroke == Stroke.back;
 	}
 	
 	public void moveUp() {
