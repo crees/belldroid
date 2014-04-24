@@ -5,27 +5,24 @@
 
    	<Spinner
    	    android:id="@+id/numberOfBells"
-   	    android:layout_width="wrap_content"
-   	    android:layout_height="wrap_content" >
-	</Spinner>
+   	    android:layout_width="match_parent"
+   	    android:layout_height="wrap_content" />
 
    	<Spinner
    	    android:id="@+id/methodChooser"
-   	    android:layout_width="wrap_content"
+   	    android:layout_width="match_parent"
    	    android:layout_height="wrap_content" />
-   	
+
    	<TextView
-        android:id="@+id/debug"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
-    </TextView>
+   	    android:id="@+id/debug"
+   	    android:layout_width="match_parent"
+   	    android:layout_height="wrap_content"
+   	    android:text="" />
    	
    	<TableLayout
    	    android:id="@+id/mainTable"
    	    android:layout_width="match_parent"
    	    android:layout_height="match_parent"
-   	    android:stretchColumns="*" >
-
-   	</TableLayout>
+   	    android:stretchColumns="*" />
    	 
 </LinearLayout>

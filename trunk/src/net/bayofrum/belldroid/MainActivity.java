@@ -22,13 +22,18 @@ import android.widget.TextView;
 
 public class MainActivity extends Activity {
 	
-//	private TextView debug;
+	private TextView debug;
 
-	/* If increased, please check that there is a Layout for the numbers! */
+	/* If increased, please check that there is a Layout for the numbers! 
+	 * Also necessary will be modification of the regex (BOTH!) in
+	 * moveBellsAround and adding cases for the letters.
+	 * As well, add a line to methods for each new bell.
+	 */
 	private static final int maxNumberOfBells = 12;
 	
-	private int numberOfBells, place = 1, roundTime = 1500,
-			change = 0, methodSelected = 0;
+	private int numberOfBells, place = 1, roundTime = 2143 /* three hour peal */,
+			change = 0;
+	private Boolean standing = false;
 	
 	private Bell[] bells = new Bell[maxNumberOfBells];
 	
@@ -37,8 +42,8 @@ public class MainActivity extends Activity {
 		
 		@Override
 		public void run() {
-			ringOneBlow();
 			ringHandler.postDelayed(this, roundTime / numberOfBells);
+			ringOneBlow();
 		}
 	};
 	
@@ -54,25 +59,35 @@ public class MainActivity extends Activity {
 			}, // Doubles
 			{
 				{"Plain Hunt",
-					"x16x16x16x16x16x16"},
+					"x1x1x1x1x1x1"},
 				{"Plain Hunt Doubles",
-					"56.16.56.16.56.16.56.16.56.16"},
+					"5.1.5.1.5.1.5.1.5.1"},
+				{"Plain Hunt Doubles le",
+					"5.1.5.1.5 le 1"},
+				{"Grandsire Doubles",
+					"3.1.5.1.5.1.5.1.5.1"},
 			}, // Minor
 			{{"None", ""}}, // Triples
 			{{"None", ""}}, // Major
 			{{"None", ""}}, // Caters
 			{{"None", ""}}, // Royal
 			{{"None", ""}}, // Cinques
-			{{"None", ""}}, // Maximus
+			{
+				{"Cambridge Surprise Maximus", 
+					"-3T-14-125T-36-147T-58-169T-70-18-9T-10-ET le 12"}
+					// Allegedly equivalent; "x3x4x25x36x47x58x69x70x8x9x0xE le 2"}
+			}, // Maximus
 	};
 	private int methodPosition = 0; /* Used to keep track
 									 * of where we are */
-
+	private String methodSelected = ""; /*	Will contain the place 
+										 *	notation for the method */
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		
+
 		/* Populate the Spinner with number of bells */
 		Spinner bellChooser = (Spinner) findViewById(R.id.numberOfBells);
 		ArrayList<Integer> numBellsAdapter = new ArrayList<Integer>();
@@ -98,7 +113,7 @@ public class MainActivity extends Activity {
 						// DO_NADA-- can't happen
 					}
 		});
-//		debug = (TextView)findViewById(R.id.debug);
+		debug = (TextView)findViewById(R.id.debug);
 
 	}
 
@@ -209,6 +224,7 @@ public class MainActivity extends Activity {
 						
 						@Override
 						public void onClick(View v) {
+							methodPosition = 0;
 							change = 1;
 						}
 					});
@@ -221,12 +237,7 @@ public class MainActivity extends Activity {
 						
 						@Override
 						public void onClick(View v) {
-							ringHandler.removeCallbacks(ringHandlerRun);
-							for (Bell b : bells) {
-								if (b.getStroke() != Bell.Stroke.hand)
-									b.ring();
-							}
-							place = 1;
+							standing = true;
 						}
 					});
 					row.addView(stand);
@@ -259,7 +270,8 @@ public class MainActivity extends Activity {
 					@Override
 					public void onItemSelected(AdapterView<?> arg0, View arg1,
 							int arg2, long arg3) {
-						methodSelected = arg0.getSelectedItemPosition();
+						methodSelected = methods[numberOfBells]
+								[arg0.getSelectedItemPosition()][1];
 					}
 
 					@Override
@@ -277,8 +289,14 @@ public class MainActivity extends Activity {
 		if (place == 0) {
 			place++;
 			moveBellsAround();
-			if (bells[0].getStroke() == Bell.Stroke.hand)
+			if (bells[0].atHandStroke()) {
+				if (standing == true) {
+					standing = false;
+					ringHandler.removeCallbacks(ringHandlerRun);
+					onPause();
+				}
 				return;
+			}
 		}
 
 		for (Bell bell : bells)
@@ -293,9 +311,14 @@ public class MainActivity extends Activity {
 		/* No error checking!!! Please make sure
 		 * your method is correct...
 		 */
-		if (change == 0)
+		switch (change) {
+		case 0:
 			return; /* Still in rounds */
-		
+		case 1:
+			/* We need to check that we start at handstroke. */
+			if (bells[0].atBackStroke())
+				return;
+		}
 		change++;
 		
 		/* OK, so now we need to iterate through the
@@ -306,17 +329,73 @@ public class MainActivity extends Activity {
 		 * iterator to move across the line.
 		 */
 		
-		String method = methods[numberOfBells][methodSelected][1];
-	
 		ArrayList<Integer> exceptions = new ArrayList<Integer>();
 		
-		if (methodPosition >= method.length()) {
-			/* That's all!  Sure hope we're at rounds.... */
-			change = 0;
-			return;
+		if (methodPosition >= methodSelected.length()) {
+			/* Instructions finished.  Are we in rounds? */
+			Boolean rounds = true;
+			for (int p = 1; p < numberOfBells + 1; p++) {
+				if (bells[p-1].getPlace() != p)
+					rounds = false;
+			}
+			if (rounds) {
+				/* That's all! */
+				change = 0;
+				return;
+			}
+			/* In this case, we need to know if a full lead was given.
+			 * If the lead is symmetrical, then we need to reverse
+			 * the instructions to get treble back to lead.
+			 */
+			switch (bells[0].getPlace()) {
+			case 1:
+				/* Complete instructions, we simply restart the
+				 * method until we get back to rounds.
+				 */
+				methodPosition = 0;
+				return;
+			default:
+				/* Houston, we have a problem...? */
+				methodPosition = 0;
+				String order = new String();
+				for (int i = 0; i < numberOfBells; i++) {
+					for (Bell b : bells) {
+						if (i+1 == b.getPlace())
+							order += String.valueOf(b.getNumber());
+					}
+				}
+				debug.setText("Uh, run out, no lead end????" + order);
+//				ringHandler.removeCallbacks(ringHandlerRun);
+				return;
+			}
 		}
 		
-		switch (method.charAt(methodPosition)) {
+		String order = new String();
+		for (int i = 0; i < numberOfBells; i++) {
+			for (Bell b : bells) {
+				if (i+1 == b.getPlace())
+					order += String.valueOf(b.getNumber()) + " ";
+			}
+		}
+		debug.setText(order);
+		switch (methodSelected.charAt(methodPosition)) {
+		case ' ':
+		case 'l':
+			/* Symmetrical instructions, only the first half
+			 * is given plus lead end.  We must invert them, strip
+			 * the first instruction and then append them to the method.
+			 */
+			Pattern e = Pattern.compile("^((.*)[-x]|(.*[-x.])[0-9ET]+) ?l[he] ?([0-9ET]+)$");
+			Matcher m = e.matcher(methodSelected);
+			m.find();
+			String methodBody = m.group(m.group(2) != null ? 2 : 3);
+			/* We don't really need to worry about extra dots */
+			methodSelected = m.group(1) +
+					new StringBuilder(methodBody).reverse().toString() +
+					"." + m.group(4); /* Lead end */
+			debug.setText(methodSelected);
+			moveBellsAround(); /* Recurse */
+			return;
 		case '-':
 		case 'x':
 			/* OK, swap all bells over */
@@ -325,45 +404,55 @@ public class MainActivity extends Activity {
 			return;
 		case '.':
 			/* OK, we're done switching and holding, time to move on! */
-			methodPosition++;
+			while (methodSelected.charAt(++methodPosition) == '.')
+				/* Skip past all dots */;
 			break;
 		}
 		/* We have obviously been given a number.
 		 * Add this to the collection.
 		 */
-		Pattern expression = Pattern.compile("^[0-9]+");
-		Matcher matcher = expression.matcher(method.substring(methodPosition));
+		Pattern expression = Pattern.compile("^[0-9ET]+");
+		Matcher matcher = expression.matcher(methodSelected.substring(methodPosition));
 		matcher.find();
-//		debug.setText(String.valueOf(matcher.end()));
+//		debug.setText(methodSelected);
 		methodPosition += matcher.end();
-		for (char c : matcher.group().toCharArray())
-				exceptions.add(c - '0');					
+		for (char c : matcher.group().toCharArray()) {
+			/* What a faff! We must first try bells 10-12 */	
+			switch (c) {
+			case '0':
+				exceptions.add(10);
+				break;
+			case 'E':
+				exceptions.add(11);
+				break;
+			case 'T':
+				exceptions.add(12);
+				break;
+			default:
+				exceptions.add(c - '0');
+				break;
+			}
+		}
 		swapAllBellsExcept(exceptions);
 	}
 	
 	private void swapAllBellsExcept(ArrayList<Integer> exceptions) {
 
-		int up = 1;
-		
 		/* Get array of bells in place order */
 		ArrayList<Bell> bellsInPlaceOrder = new ArrayList<Bell>();
 		for (int p = 1; p <= numberOfBells; p++)
 			for (Bell b : bells)
-				if (b.getPlace() == p)
+				if (b.getPlace() == p && !exceptions.contains(b.getPlace()))
 					bellsInPlaceOrder.add(b);
-
-		for (Bell b : bellsInPlaceOrder) {
-			if (exceptions.contains(b.getPlace()))
-				continue;
-			switch (up) {
-			case 0:
-				up = 1;
-				b.moveDown();
-				break;
-			case 1:
-				up = 0;
-				b.moveUp();
-				break;
+		
+		/* Find adjacent pairs of bells, and swap */
+		
+		for (int p = 0; p < bellsInPlaceOrder.size() - 1; p += 2) {
+			Bell first = bellsInPlaceOrder.get(p);
+			Bell second = bellsInPlaceOrder.get(p + 1);
+			if (second.getPlace() - first.getPlace() == 1) {
+				first.moveUp();
+				second.moveDown();
 			}
 		}
 	}
@@ -378,5 +467,10 @@ public class MainActivity extends Activity {
 	public void onPause() {
 		super.onPause();
 		ringHandler.removeCallbacks(ringHandlerRun);
+		place = 1;
+		change = 0;
+		methodPosition = 0;
+		for (Bell b: bells)
+			b.setPlace(b.getNumber());
 	}
 }
