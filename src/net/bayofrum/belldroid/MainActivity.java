@@ -5,20 +5,23 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
+import android.text.InputFilter.LengthFilter;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.Spinner;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
 	
@@ -27,13 +30,19 @@ public class MainActivity extends Activity {
 	/* If increased, please check that there is a Layout for the numbers! 
 	 * Also necessary will be modification of the regex (BOTH!) in
 	 * moveBellsAround and adding cases for the letters.
-	 * As well, add a line to methods for each new bell.
+	 * As well, add a line to methods for each new bell, and in Preferences
+	 * array too.
 	 */
 	private static final int maxNumberOfBells = 12;
-	
-	private int numberOfBells, place = 1, roundTime = 2143 /* three hour peal */,
-			change = 0;
-	private Boolean standing = false;
+	private static final int delayBeforeStriking = 1000;
+	private int place = 0, change = 0, blowTime, userBellPlace = 0;
+	private int scoreTotal = 0, scoreOverRounds = 0;
+	/**
+	 * elapsedTime-- used with System.nanoTime() to 
+	 * 				 measure time between manual blows
+	 */
+	private long elapsedTime;
+	private boolean standing = false;
 	
 	private Bell[] bells = new Bell[maxNumberOfBells];
 	
@@ -42,79 +51,128 @@ public class MainActivity extends Activity {
 		
 		@Override
 		public void run() {
-			ringHandler.postDelayed(this, roundTime / numberOfBells);
 			ringOneBlow();
+		}
+	};
+	private OnClickListener ringMe = new OnClickListener() {
+		
+		@Override
+		public void onClick(View arg0) {
+			Bell bell = (Bell) arg0;
+			if (bell.getNumber() != getUserBell())
+				return;
+			int msec = (int)(System.nanoTime() - elapsedTime) / 1000000;
+			bell.ring(ringHandler, sprefs.getBoolean("simulator", false) ?
+					delayBeforeStriking : 0);
+			/* Are we on time? Check first for ringing way out, before the
+			 * previous blow or after the next blow */
+			if (bell.getPlace() > place) {
+				debug.setText("Way too early! %score: " +
+						scoreTotal / ++scoreOverRounds);
+				return;
+			} else if (bell.getPlace() + 1 < place) {
+				debug.setText("Way too wide! %score: " +
+						scoreTotal / ++scoreOverRounds);
+				return;
+			}
+
+			int blowTime = getBlowTime();
+			int percentOff = ((msec - blowTime) * 100) / blowTime;
+			scoreTotal += 100 - Math.abs(percentOff);
+			if (Math.abs(percentOff) < 10)
+				debug.setText("Very good! %score:" +
+						scoreTotal / ++scoreOverRounds);
+			else if (percentOff > 0)
+				debug.setText("Try a little earlier, %score: " +
+						scoreTotal / ++scoreOverRounds);
+			else
+				debug.setText("Try a little wider, %score: " +
+						scoreTotal / ++scoreOverRounds);
 		}
 	};
 	
 	private SoundPool soundpool = null;
 	
-	private static final String[][][] methods = {
+	public static final String[][][] methods =
+		{
 			{{}}, {{}}, {{}}, // 0-2 bells (!)
-			{{"None", ""}}, // Singles
-			{{"None", ""}}, // Minimus
 			{
-				{"Plain Hunt",
+				{"Plain Hunt Singles",
+					"3.1.3.1.3.1"},
+			}, // Singles
+			{
+				{"Plain Hunt Minimus",
+					"x1x1x1x1"},
+				{"Plain Hunt Singles",
+					"3.1.3.1.3.1"},
+				{"Short Cure for Melancholy",
+					"3.13.1.13.3.13.1.13.3.13.1"}
+			}, // Minimus
+			{
+				{"Plain Hunt Doubles",
 					"5.1.5.1.5.1.5.1.5.1"},
 			}, // Doubles
 			{
-				{"Plain Hunt",
+				{"Plain Hunt Minor",
 					"x1x1x1x1x1x1"},
 				{"Plain Hunt Doubles",
-					"5.1.5.1.5.1.5.1.5.1"},
-				{"Plain Hunt Doubles le",
 					"5.1.5.1.5 le 1"},
 				{"Grandsire Doubles",
 					"3.1.5.1.5.1.5.1.5.1"},
 			}, // Minor
-			{{"None", ""}}, // Triples
-			{{"None", ""}}, // Major
-			{{"None", ""}}, // Caters
-			{{"None", ""}}, // Royal
-			{{"None", ""}}, // Cinques
 			{
+				{"Plain Hunt Triples", 
+					"7.1.7.1.7.1.7.1.7.1.7.1.7.1"},
+			}, // Triples
+			{
+				{"Plain Hunt Major",
+					"x1x1x1x1x1x1x1x1"},
+				{"Plain Hunt Triples",
+					"7.1.7.1.7.1.7.1.7.1.7.1.7.1"},
+			}, // Major
+			{
+				{"Plain Hunt Caters",
+					"9.1.9.1.9.1.9.1.9.1.9.1.9.1.9.1.9.1"},
+			}, // Caters
+			{
+				{"Plain Hunt Royal",
+					"x1x1x1x1x1x1x1x1x1"},
+				{"Plain Hunt Caters",
+					"9.1.9.1.9.1.9.1.9.1.9.1.9.1.9.1.9.1"},
+			}, // Royal
+			{
+				{"Plain Hunt Cinques", 
+					"E.1.E.1.E.1.E.1.E.1.E.1.E.1.E.1.E.1.E.1.E.1"},
+			}, // Cinques
+			{
+				{"Plain Hunt Maximus",
+					"x1x1x1x1x1x1x1x1x1x1x1x1"},
+				{"Plain Hunt Cinques",
+					"E.1.E.1.E.1.E.1.E.1.E.1.E.1.E.1.E.1.E.1.E.1"},
 				{"Cambridge Surprise Maximus", 
 					"-3T-14-125T-36-147T-58-169T-70-18-9T-10-ET le 12"}
 					// Allegedly equivalent; "x3x4x25x36x47x58x69x70x8x9x0xE le 2"}
 			}, // Maximus
-	};
+		};
 	private int methodPosition = 0; /* Used to keep track
 									 * of where we are */
 	private String methodSelected = ""; /*	Will contain the place 
 										 *	notation for the method */
 	
+	private SharedPreferences sprefs;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-
-		/* Populate the Spinner with number of bells */
-		Spinner bellChooser = (Spinner) findViewById(R.id.numberOfBells);
-		ArrayList<Integer> numBellsAdapter = new ArrayList<Integer>();
-		for (int i = 4; i <= maxNumberOfBells; i++) {
-			numBellsAdapter.add(i);
-		}
-		
-		bellChooser.setAdapter(new ArrayAdapter<Integer> (this,
-				android.R.layout.simple_spinner_item, numBellsAdapter));
-		bellChooser.setOnItemSelectedListener(
-				new AdapterView.OnItemSelectedListener() {
-
-					@Override
-					public void onItemSelected(AdapterView<?> arg0, View arg1,
-							int arg2, long arg3) {
-						numberOfBells = (Integer)arg0.getSelectedItem();
-						showMethodsInSpinner();
-						draw_bells();
-					}
-
-					@Override
-					public void onNothingSelected(AdapterView<?> arg0) {
-						// DO_NADA-- can't happen
-					}
-		});
+		PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+		sprefs = PreferenceManager.getDefaultSharedPreferences(this);
 		debug = (TextView)findViewById(R.id.debug);
 
+	}
+	
+	public int getNumberOfBells() {
+		return Integer.valueOf(sprefs.getString("number_of_bells", "6"));
 	}
 
 	protected void draw_bells() {
@@ -188,16 +246,19 @@ public class MainActivity extends Activity {
 		ringHandler.removeCallbacks(ringHandlerRun);
 		if (soundpool != null)
 			soundpool.release();
-		soundpool = new SoundPool(12, AudioManager.STREAM_MUSIC, 0);
+		soundpool = new SoundPool(getNumberOfBells(),
+				AudioManager.STREAM_MUSIC, 0);
 		
-		place = 1;
+		place = 0;
 		change = 0;
+		methodPosition = 0;
 		
 		for (int counter = 0; counter < maxNumberOfBells; counter++) {
-			bells[counter] = new Bell(this, counter+1, maxNumberOfBells, numberOfBells, soundpool);
+			bells[counter] = new Bell(this, counter+1, maxNumberOfBells, getNumberOfBells(), soundpool);
+			bells[counter].setOnClickListener(ringMe);
 		}
 
-		for (int[] r: Layouts[numberOfBells]) {
+		for (int[] r: Layouts[getNumberOfBells()]) {
 			TableRow row = new TableRow(this);
 			row.setLayoutParams(new TableLayout.LayoutParams(
                     TableLayout.LayoutParams.MATCH_PARENT,
@@ -212,7 +273,9 @@ public class MainActivity extends Activity {
 						@Override
 						public void onClick(View v) {
 							ringHandler.removeCallbacks(ringHandlerRun);
-							ringHandler.postDelayed(ringHandlerRun, roundTime / numberOfBells);
+							blowTime = getBlowTime();
+							ringHandler.postDelayed(ringHandlerRun,
+									blowTime);
 						}
 					});
 					row.addView(lookto);
@@ -224,6 +287,8 @@ public class MainActivity extends Activity {
 						
 						@Override
 						public void onClick(View v) {
+							methodSelected = 
+									sprefs.getString("selected_method", "");
 							methodPosition = 0;
 							change = 1;
 						}
@@ -254,57 +319,96 @@ public class MainActivity extends Activity {
 		}
 	}
 	
-	private void showMethodsInSpinner() {
-		/* Populate the Spinner with methods */
-		Spinner methodChooser = (Spinner) findViewById(R.id.methodChooser);
-		ArrayList<String> methodAdapter = new ArrayList<String>();
-		for (String[] method : methods[numberOfBells]) {
-			methodAdapter.add(method[0]);
-		}
-		
-		methodChooser.setAdapter(new ArrayAdapter<String> (this,
-				android.R.layout.simple_spinner_item, methodAdapter));
-		methodChooser.setOnItemSelectedListener(
-				new AdapterView.OnItemSelectedListener() {
-
-					@Override
-					public void onItemSelected(AdapterView<?> arg0, View arg1,
-							int arg2, long arg3) {
-						methodSelected = methods[numberOfBells]
-								[arg0.getSelectedItemPosition()][1];
-					}
-
-					@Override
-					public void onNothingSelected(AdapterView<?> arg0) {
-						// DO_NADA-- can't happen
-					}
-		});
-
-	}
-
 	private void ringOneBlow() {
+		ringHandler.postDelayed(ringHandlerRun, blowTime);
+
 		/* Open handstroke lead-- all bells will be
 		 * at handstroke, so just check the treble.
 		 */
+
 		if (place == 0) {
 			place++;
 			moveBellsAround();
+			if (getUserBell() > 0 && getUserBell() < getNumberOfBells()) {
+				userBellPlace = bells[getUserBell()-1].getPlace();
+				if (userBellPlace == 1) {
+					/* The user's bell is leading.
+					 * If we are getting the handstroke gap, we
+					 * set the timer for the next blow.
+					 * Otherwise, if we're going for backstroke, set the
+					 * timer behind by one blow to score correctly.
+					 * Don't trust the Treble's stroke here, pick third!
+					 */
+					elapsedTime = System.nanoTime() - 
+							(bells[2].atBackStroke() ? blowTime * 1000000 : 0);
+				}
+			} else
+				userBellPlace = 0;
 			if (bells[0].atHandStroke()) {
+				/* The Treble is Always Right! (even if the user
+				 * controls it....
+				 */
 				if (standing == true) {
 					standing = false;
-					ringHandler.removeCallbacks(ringHandlerRun);
 					onPause();
 				}
 				return;
 			}
 		}
+		
+		if (place == userBellPlace) {
+			/* Don't ring the user's bell! */
+		} else {
+			for (Bell bell : bells)
+				if (bell.getPlace() == place)
+					bell.ring(ringHandler,
+							sprefs.getBoolean("simulator", false) ?
+							delayBeforeStriking : 0);			
+		}
+		
+		if (place == userBellPlace - 1) {
+			/* Next stroke will be the user's bell!  Start the timer... 
+			 * Leading is dealt with earlier. */
+			elapsedTime = System.nanoTime();
+		}
 
-		for (Bell bell : bells)
-			if (bell.getPlace() == place) {
-				bell.ring();
-			}
-		if (++place > numberOfBells)
+		if (++place > getNumberOfBells())
 			place = 0;
+	}
+	
+	private int getUserBell() {
+		String userBellString = sprefs.getString("my_bell", "None");
+		
+		if (userBellString.equals("None"))
+			return 0;
+		else
+			return Integer.parseInt(userBellString);
+	}
+	
+	private int getBlowTime() {
+		String peal_string = sprefs.getString("peal_time", "180");
+		int peal_minutes;
+		try {
+			peal_minutes = Integer.parseInt(peal_string);
+		} catch (NumberFormatException e) {
+			Toast.makeText(this,
+					"Ah... no text allowed in peal time! Defaulting to 180",
+					Toast.LENGTH_LONG).show();
+			peal_minutes = 180;
+		}
+		
+		/* We do not want to overflow... just in case! */
+		long peal_milliseconds = (long)peal_minutes * 60000;
+		
+		int blow_milliseconds = (int)(peal_milliseconds / 5040);
+		
+		/* Because of open handstroke lead, we have an extra
+		 * beat every two rounds.
+		 */
+		blow_milliseconds *= 2;
+		blow_milliseconds /= (getNumberOfBells() * 2 + 1);
+		
+		return blow_milliseconds; /* Int preference??? */
 	}
 	
 	private void moveBellsAround() {
@@ -334,7 +438,7 @@ public class MainActivity extends Activity {
 		if (methodPosition >= methodSelected.length()) {
 			/* Instructions finished.  Are we in rounds? */
 			Boolean rounds = true;
-			for (int p = 1; p < numberOfBells + 1; p++) {
+			for (int p = 1; p < getNumberOfBells() + 1; p++) {
 				if (bells[p-1].getPlace() != p)
 					rounds = false;
 			}
@@ -342,7 +446,7 @@ public class MainActivity extends Activity {
 				/* That's all! */
 				change = 0;
 				return;
-			}
+			} else
 			/* In this case, we need to know if a full lead was given.
 			 * If the lead is symmetrical, then we need to reverse
 			 * the instructions to get treble back to lead.
@@ -353,31 +457,33 @@ public class MainActivity extends Activity {
 				 * method until we get back to rounds.
 				 */
 				methodPosition = 0;
-				return;
+				break; /* Will now continue to change */
 			default:
 				/* Houston, we have a problem...? */
 				methodPosition = 0;
 				String order = new String();
-				for (int i = 0; i < numberOfBells; i++) {
+				for (int i = 0; i < getNumberOfBells(); i++) {
 					for (Bell b : bells) {
 						if (i+1 == b.getPlace())
 							order += String.valueOf(b.getNumber());
 					}
 				}
 				debug.setText("Uh, run out, no lead end????" + order);
-//				ringHandler.removeCallbacks(ringHandlerRun);
+				ringHandler.removeCallbacks(ringHandlerRun);
 				return;
 			}
 		}
 		
-		String order = new String();
-		for (int i = 0; i < numberOfBells; i++) {
+/*		Debug section to show the order of bells.
+ * 		String order = new String();
+		for (int i = 0; i < getNumberOfBells(); i++) {
 			for (Bell b : bells) {
 				if (i+1 == b.getPlace())
 					order += String.valueOf(b.getNumber()) + " ";
 			}
 		}
 		debug.setText(order);
+*/
 		switch (methodSelected.charAt(methodPosition)) {
 		case ' ':
 		case 'l':
@@ -393,7 +499,6 @@ public class MainActivity extends Activity {
 			methodSelected = m.group(1) +
 					new StringBuilder(methodBody).reverse().toString() +
 					"." + m.group(4); /* Lead end */
-			debug.setText(methodSelected);
 			moveBellsAround(); /* Recurse */
 			return;
 		case '-':
@@ -414,7 +519,6 @@ public class MainActivity extends Activity {
 		Pattern expression = Pattern.compile("^[0-9ET]+");
 		Matcher matcher = expression.matcher(methodSelected.substring(methodPosition));
 		matcher.find();
-//		debug.setText(methodSelected);
 		methodPosition += matcher.end();
 		for (char c : matcher.group().toCharArray()) {
 			/* What a faff! We must first try bells 10-12 */	
@@ -440,13 +544,12 @@ public class MainActivity extends Activity {
 
 		/* Get array of bells in place order */
 		ArrayList<Bell> bellsInPlaceOrder = new ArrayList<Bell>();
-		for (int p = 1; p <= numberOfBells; p++)
+		for (int p = 1; p <= getNumberOfBells(); p++)
 			for (Bell b : bells)
 				if (b.getPlace() == p && !exceptions.contains(b.getPlace()))
 					bellsInPlaceOrder.add(b);
 		
 		/* Find adjacent pairs of bells, and swap */
-		
 		for (int p = 0; p < bellsInPlaceOrder.size() - 1; p += 2) {
 			Bell first = bellsInPlaceOrder.get(p);
 			Bell second = bellsInPlaceOrder.get(p + 1);
@@ -464,13 +567,26 @@ public class MainActivity extends Activity {
 		return true;
 	}
 	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+	    switch (item.getItemId()) {
+	    case R.id.action_settings:
+	        startActivity(new Intent(this, PreferencesActivity.class));
+	        return true;
+	    default:
+	        return super.onOptionsItemSelected(item);
+	    }
+	}
+	
+	@Override
 	public void onPause() {
 		super.onPause();
 		ringHandler.removeCallbacks(ringHandlerRun);
-		place = 1;
-		change = 0;
-		methodPosition = 0;
-		for (Bell b: bells)
-			b.setPlace(b.getNumber());
+	}
+	
+	@Override
+	public void onResume() {
+		super.onResume();
+		draw_bells();
 	}
 }

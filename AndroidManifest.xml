@@ -21,6 +21,7 @@
             </intent-filter>
             
         </activity>
+        <activity android:name="net.bayofrum.belldroid.PreferencesActivity"></activity>
         
     </application>
 

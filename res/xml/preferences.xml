@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+    <ListPreference
+        android:entries="@array/bellsAvailable"
+        android:entryValues="@array/bellsAvailable"
+        android:title="@string/number_of_bells"
+        android:key="number_of_bells" />
+    <ListPreference
+        android:key="my_bell"
+        android:title="My bell" />
+    <ListPreference
+        android:key="selected_method"
+        android:title="Method" />
+    <EditTextPreference
+        android:title="Peal time in minutes"
+        android:key="peal_time"
+        android:defaultValue="180" />
+    <SwitchPreference android:key="simulator" android:summaryOff="No delay" android:title="Delay bell's strike sound" android:summaryOn="Delay"/>
+</PreferenceScreen>
