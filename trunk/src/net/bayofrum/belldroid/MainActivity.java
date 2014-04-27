@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -174,6 +175,8 @@ public class MainActivity extends Activity {
 		return Integer.valueOf(sprefs.getString("number_of_bells", "6"));
 	}
 
+	@SuppressWarnings("deprecation") /* FILL_PARENT */
+	@SuppressLint("InlinedApi") /* FILL_PARENT */
 	protected void draw_bells() {
 		/* Should be straightforward to understand
 		 * layout concept.  -1 for Look to! button,
@@ -260,8 +263,8 @@ public class MainActivity extends Activity {
 		for (int[] r: Layouts[getNumberOfBells()]) {
 			TableRow row = new TableRow(this);
 			row.setLayoutParams(new TableLayout.LayoutParams(
-                    TableLayout.LayoutParams.MATCH_PARENT,
-                    TableLayout.LayoutParams.MATCH_PARENT, 1.0f));
+                    TableLayout.LayoutParams.FILL_PARENT,
+                    TableLayout.LayoutParams.FILL_PARENT, 1.0f));
 			for (int col : r) {
 				switch (col) {
 				case -1:
