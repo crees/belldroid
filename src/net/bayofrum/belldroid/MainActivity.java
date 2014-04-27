@@ -12,7 +12,6 @@ import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.text.InputFilter.LengthFilter;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -212,29 +211,29 @@ public class MainActivity extends Activity {
 				{
 					{0, 0, 3, 4, 0, 0},
 					{0, 2, 0, 0, 5, 0},
-					{1, -1, -2, 0, -3, 6},
-					{0, 9, 0, 0, 7, 0},
+					{1, -1, -2, 0, 0, 6},
+					{0, 9, 0, -3, 7, 0},
 					{0, 0, 0, 8, 0, 0},
 				},	// Nine (Caters)
 				{	{0, 0, 3, 4, 0, 0},
 					{0, 2, 0, 0, 5, 0},
-					{1, -1, -2, 0, -3, 6},
-					{0, 10, 0, 0, 7, 0},
+					{1, -1, -2, 0, 0, 6},
+					{0, 10, -3, 0, 7, 0},
 					{0, 0, 9, 8, 0, 0},
 				},	// Ten (Caters, Royal)
 				{
 					{0, 0, 3, 4, 0, 0},
 					{0, 2, 0, 0, 5, 0},
-					{1, -1, -2, 0, -3, 6},
-					{11, 0, 0, 0, 0, 7},
+					{1, -1, -2, 0, 0, 6},
+					{11, 0, -3, 0, 0, 7},
 					{0, 10, 0, 0, 8, 0},
 					{0, 0, 0, 9, 0, 0},
 				},	// Eleven (Cinques)
 				{
 					{0, 0, 3, 4, 0, 0},
-					{0, 2, 0, 0, 5, 0},
-					{1, -1, -2, 0, -3, 6},
-					{12, 0, 0, 0, 0, 7},
+					{0, 2, -1, 0, 5, 0},
+					{1, 0, -2, 0, 0, 6},
+					{12, 0, -3, 0, 0, 7},
 					{0, 11, 0, 0, 8, 0},
 					{0, 0, 10, 9, 0, 0},
 				},	// Twelve (Cinques/maximus)
