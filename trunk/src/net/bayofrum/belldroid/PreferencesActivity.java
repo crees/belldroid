@@ -7,7 +7,6 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.PreferenceActivity;
-import android.preference.PreferenceCategory;
 import android.preference.PreferenceManager;
 
 public class PreferencesActivity extends PreferenceActivity {
@@ -19,6 +18,7 @@ public class PreferencesActivity extends PreferenceActivity {
 	private OnSharedPreferenceChangeListener prefchangelistener;
 	
 	/** Called when the activity is first created. */
+	@SuppressWarnings("deprecation")
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
@@ -56,6 +56,7 @@ public class PreferencesActivity extends PreferenceActivity {
 	
 	private void set_method_prefs(int numBells) {
 
+		@SuppressWarnings("deprecation")
 		ListPreference methodpref = 
 				(ListPreference)findPreference("selected_method");
 	    
@@ -78,6 +79,7 @@ public class PreferencesActivity extends PreferenceActivity {
 	
 	private void set_my_bell(int numBells) {
 
+		@SuppressWarnings("deprecation")
 		ListPreference myBell = 
 				(ListPreference)findPreference("my_bell");
 	    
