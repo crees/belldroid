@@ -149,9 +149,10 @@ public class MainActivity extends Activity {
 					"x1x1x1x1x1x1x1x1x1x1x1x1"},
 				{"Plain Hunt Cinques",
 					"E.1.E.1.E.1.E.1.E.1.E.1.E.1.E.1.E.1.E.1.E.1"},
-				{"Cambridge Surprise Maximus", 
-					"-3T-14-125T-36-147T-58-169T-70-18-9T-10-ET le 12"}
-					// Allegedly equivalent; "x3x4x25x36x47x58x69x70x8x9x0xE le 2"}
+//				{"Cambridge Surprise Maximus", 
+//					"-3T-14-125T-36-147T-58-169T-70-18-9T-10-ET le 12"},
+				{"Cambridge Surprise Maximus",
+					"x3x4x25x36x47x58x69x70x8x9x0xE le 2"},
 			}, // Maximus
 		};
 	private int methodPosition = 0; /* Used to keep track
@@ -466,8 +467,23 @@ public class MainActivity extends Activity {
 				String order = new String();
 				for (int i = 0; i < getNumberOfBells(); i++) {
 					for (Bell b : bells) {
-						if (i+1 == b.getPlace())
-							order += String.valueOf(b.getNumber());
+						if (i+1 == b.getPlace()) {
+							int num = b.getNumber();
+							switch (num) {
+							case 10:
+								order += "0";
+								break;
+							case 11:
+								order += "E";
+								break;
+							case 12:
+								order += "T";
+								break;
+							default:
+								order += String.valueOf(num);
+								break;
+							}
+						}
 					}
 				}
 				debug.setText("Uh, run out, no lead end????" + order);
@@ -476,8 +492,8 @@ public class MainActivity extends Activity {
 			}
 		}
 		
-/*		Debug section to show the order of bells.
- * 		String order = new String();
+/*		Debug section to show the order of bells. */
+  		String order = new String();
 		for (int i = 0; i < getNumberOfBells(); i++) {
 			for (Bell b : bells) {
 				if (i+1 == b.getPlace())
@@ -485,7 +501,7 @@ public class MainActivity extends Activity {
 			}
 		}
 		debug.setText(order);
-*/
+
 		switch (methodSelected.charAt(methodPosition)) {
 		case ' ':
 		case 'l':
@@ -512,7 +528,7 @@ public class MainActivity extends Activity {
 		case '.':
 			/* OK, we're done switching and holding, time to move on! */
 			while (methodSelected.charAt(++methodPosition) == '.')
-				/* Skip past all dots */;
+				;
 			break;
 		}
 		/* We have obviously been given a number.
@@ -544,6 +560,20 @@ public class MainActivity extends Activity {
 	
 	private void swapAllBellsExcept(ArrayList<Integer> exceptions) {
 
+		/* Minimum place notation is really annoying.
+		 * One has to work outwards, using the stationary
+		 * bells as guides.  For example;
+		 * .4. means that the lead stays still, but if
+		 * we don't add 1 here, the code will make the thirds
+		 * and fourths stay still.
+		 * We can almost cheat... if the first exception is
+		 * even, we must keep the lead still.
+		 */
+		
+		if (!exceptions.isEmpty())
+			if ((exceptions.get(0).intValue() & 1) == 0)
+				exceptions.add(1);
+		
 		/* Get array of bells in place order */
 		ArrayList<Bell> bellsInPlaceOrder = new ArrayList<Bell>();
 		for (int p = 1; p <= getNumberOfBells(); p++)
@@ -552,7 +582,7 @@ public class MainActivity extends Activity {
 					bellsInPlaceOrder.add(b);
 		
 		/* Find adjacent pairs of bells, and swap */
-		for (int p = 0; p < bellsInPlaceOrder.size() - 1; p += 2) {
+		for (int p = 0; p < bellsInPlaceOrder.size() - 1; p++) {
 			Bell first = bellsInPlaceOrder.get(p);
 			Bell second = bellsInPlaceOrder.get(p + 1);
 			if (second.getPlace() - first.getPlace() == 1) {

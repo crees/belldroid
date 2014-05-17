@@ -20,7 +20,7 @@ public class Bell extends Button {
 	private int place;
 	public enum Stroke { hand, back };
 	private Stroke stroke = Stroke.hand;
-		
+
 	public final int soundId;
 	private final SoundPool soundPool;
 	
