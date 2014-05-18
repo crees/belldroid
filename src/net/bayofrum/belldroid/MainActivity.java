@@ -1,6 +1,8 @@
 package net.bayofrum.belldroid;
 
 import java.util.ArrayList;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -99,26 +101,22 @@ public class MainActivity extends Activity {
 			{
 				{"Plain Hunt Singles",
 					"3.1.3.1.3.1"},
+				{"Short Cure for Melancholy",
+					"3.13.1.13.3.13.1.13.3.13.1"}
 			}, // Singles
 			{
 				{"Plain Hunt Minimus",
 					"x1x1x1x1"},
-				{"Plain Hunt Singles",
-					"3.1.3.1.3.1"},
-				{"Short Cure for Melancholy",
-					"3.13.1.13.3.13.1.13.3.13.1"}
 			}, // Minimus
 			{
-				{"Plain Hunt Doubles",
-					"5.1.5.1.5.1.5.1.5.1"},
-			}, // Doubles
-			{
-				{"Plain Hunt Minor",
-					"x1x1x1x1x1x1"},
 				{"Plain Hunt Doubles",
 					"5.1.5.1.5 le 1"},
 				{"Grandsire Doubles",
 					"3.1.5.1.5.1.5.1.5.1"},
+			}, // Doubles
+			{
+				{"Plain Hunt Minor",
+					"x1x1x1x1x1x1"},
 			}, // Minor
 			{
 				{"Plain Hunt Triples", 
@@ -127,8 +125,6 @@ public class MainActivity extends Activity {
 			{
 				{"Plain Hunt Major",
 					"x1x1x1x1x1x1x1x1"},
-				{"Plain Hunt Triples",
-					"7.1.7.1.7.1.7.1.7.1.7.1.7.1"},
 			}, // Major
 			{
 				{"Plain Hunt Caters",
@@ -137,8 +133,6 @@ public class MainActivity extends Activity {
 			{
 				{"Plain Hunt Royal",
 					"x1x1x1x1x1x1x1x1x1"},
-				{"Plain Hunt Caters",
-					"9.1.9.1.9.1.9.1.9.1.9.1.9.1.9.1.9.1"},
 			}, // Royal
 			{
 				{"Plain Hunt Cinques", 
@@ -147,10 +141,6 @@ public class MainActivity extends Activity {
 			{
 				{"Plain Hunt Maximus",
 					"x1x1x1x1x1x1x1x1x1x1x1x1"},
-				{"Plain Hunt Cinques",
-					"E.1.E.1.E.1.E.1.E.1.E.1.E.1.E.1.E.1.E.1.E.1"},
-//				{"Cambridge Surprise Maximus", 
-//					"-3T-14-125T-36-147T-58-169T-70-18-9T-10-ET le 12"},
 				{"Cambridge Surprise Maximus",
 					"x3x4x25x36x47x58x69x70x8x9x0xE le 2"},
 			}, // Maximus
@@ -347,10 +337,10 @@ public class MainActivity extends Activity {
 				}
 			} else
 				userBellPlace = 0;
-			if (bells[0].atHandStroke()) {
-				/* The Treble is Always Right! (even if the user
-				 * controls it....
-				 */
+			/* Check the Treble's stroke, unless the user controls it,
+			 * in which case check the Two
+			 */
+			if ((getUserBell() == 1 ? bells[1] : bells[0]).atHandStroke()) {
 				if (standing == true) {
 					standing = false;
 					onPause();
@@ -359,22 +349,24 @@ public class MainActivity extends Activity {
 			}
 		}
 		
-		if (place == userBellPlace) {
+		switch(place - userBellPlace) {
+		case 0:
 			/* Don't ring the user's bell! */
-		} else {
+			break;
+		case -1:
+			/* Next stroke will be the user's bell!  Start the timer... 
+			 * Leading is dealt with earlier. */
+			elapsedTime = System.nanoTime();
+			/* continue */
+		default:
 			for (Bell bell : bells)
 				if (bell.getPlace() == place)
 					bell.ring(ringHandler,
 							sprefs.getBoolean("simulator", false) ?
-							delayBeforeStriking : 0);			
+							delayBeforeStriking : 0);
+			break;
 		}
 		
-		if (place == userBellPlace - 1) {
-			/* Next stroke will be the user's bell!  Start the timer... 
-			 * Leading is dealt with earlier. */
-			elapsedTime = System.nanoTime();
-		}
-
 		if (++place > getNumberOfBells())
 			place = 0;
 	}
@@ -436,7 +428,7 @@ public class MainActivity extends Activity {
 		 * iterator to move across the line.
 		 */
 		
-		ArrayList<Integer> exceptions = new ArrayList<Integer>();
+		SortedSet<Integer> exceptions = new TreeSet<Integer>();
 		
 		if (methodPosition >= methodSelected.length()) {
 			/* Instructions finished.  Are we in rounds? */
@@ -493,7 +485,7 @@ public class MainActivity extends Activity {
 		}
 		
 /*		Debug section to show the order of bells. */
-  		String order = new String();
+/* 		String order = new String();
 		for (int i = 0; i < getNumberOfBells(); i++) {
 			for (Bell b : bells) {
 				if (i+1 == b.getPlace())
@@ -501,7 +493,7 @@ public class MainActivity extends Activity {
 			}
 		}
 		debug.setText(order);
-
+*/
 		switch (methodSelected.charAt(methodPosition)) {
 		case ' ':
 		case 'l':
@@ -558,7 +550,7 @@ public class MainActivity extends Activity {
 		swapAllBellsExcept(exceptions);
 	}
 	
-	private void swapAllBellsExcept(ArrayList<Integer> exceptions) {
+	private void swapAllBellsExcept(SortedSet<Integer> exceptions) {
 
 		/* Minimum place notation is really annoying.
 		 * One has to work outwards, using the stationary
@@ -566,12 +558,12 @@ public class MainActivity extends Activity {
 		 * .4. means that the lead stays still, but if
 		 * we don't add 1 here, the code will make the thirds
 		 * and fourths stay still.
-		 * We can almost cheat... if the first exception is
+		 * We can almost cheat... if the lowest exception is
 		 * even, we must keep the lead still.
 		 */
-		
+
 		if (!exceptions.isEmpty())
-			if ((exceptions.get(0).intValue() & 1) == 0)
+			if ((exceptions.first() & 1) == 0)
 				exceptions.add(1);
 		
 		/* Get array of bells in place order */

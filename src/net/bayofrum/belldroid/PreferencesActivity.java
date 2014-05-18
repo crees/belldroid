@@ -63,7 +63,19 @@ public class PreferencesActivity extends PreferenceActivity {
 		ArrayList<CharSequence> names = new ArrayList<CharSequence>();
 		ArrayList<CharSequence> notation = new ArrayList<CharSequence>();
 	    
-	    for (CharSequence s[] : MainActivity.methods[numBells]) {
+		/* If it's an even number of bells, also allow tenor behind
+		 * methods; e.g. with 6, allow Doubles and Minor methods to
+		 * be selected.
+		 */
+		
+	    if ((numBells & 1) == 0) {
+	    	for (CharSequence s[] : MainActivity.methods[numBells - 1]) {
+	    		names.add(s[0]);
+	    		notation.add(s[1]);
+	    	}
+	    }
+		
+		for (CharSequence s[] : MainActivity.methods[numBells]) {
 	    	names.add(s[0]);
 	    	notation.add(s[1]);
 	    }
