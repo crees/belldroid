@@ -16,4 +16,6 @@
         android:key="peal_time"
         android:defaultValue="180" />
     <SwitchPreference android:key="simulator" android:summaryOff="No delay" android:title="Delay bell's strike sound" android:summaryOn="Delay"/>
+<!--<Preference android:key="update_db" android:title="Update method database" />
+-->
 </PreferenceScreen>

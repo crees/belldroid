@@ -95,56 +95,6 @@ public class MainActivity extends Activity {
 	
 	private SoundPool soundpool = null;
 	
-	public static final String[][][] methods =
-		{
-			{{}}, {{}}, {{}}, // 0-2 bells (!)
-			{
-				{"Plain Hunt Singles",
-					"3.1.3.1.3.1"},
-				{"Short Cure for Melancholy",
-					"3.13.1.13.3.13.1.13.3.13.1"}
-			}, // Singles
-			{
-				{"Plain Hunt Minimus",
-					"x1x1x1x1"},
-			}, // Minimus
-			{
-				{"Plain Hunt Doubles",
-					"5.1.5.1.5 le 1"},
-				{"Grandsire Doubles",
-					"3.1.5.1.5.1.5.1.5.1"},
-			}, // Doubles
-			{
-				{"Plain Hunt Minor",
-					"x1x1x1x1x1x1"},
-			}, // Minor
-			{
-				{"Plain Hunt Triples", 
-					"7.1.7.1.7.1.7.1.7.1.7.1.7.1"},
-			}, // Triples
-			{
-				{"Plain Hunt Major",
-					"x1x1x1x1x1x1x1x1"},
-			}, // Major
-			{
-				{"Plain Hunt Caters",
-					"9.1.9.1.9.1.9.1.9.1.9.1.9.1.9.1.9.1"},
-			}, // Caters
-			{
-				{"Plain Hunt Royal",
-					"x1x1x1x1x1x1x1x1x1"},
-			}, // Royal
-			{
-				{"Plain Hunt Cinques", 
-					"E.1.E.1.E.1.E.1.E.1.E.1.E.1.E.1.E.1.E.1.E.1"},
-			}, // Cinques
-			{
-				{"Plain Hunt Maximus",
-					"x1x1x1x1x1x1x1x1x1x1x1x1"},
-				{"Cambridge Surprise Maximus",
-					"x3x4x25x36x47x58x69x70x8x9x0xE le 2"},
-			}, // Maximus
-		};
 	private int methodPosition = 0; /* Used to keep track
 									 * of where we are */
 	private String methodSelected = ""; /*	Will contain the place 
@@ -420,6 +370,8 @@ public class MainActivity extends Activity {
 		}
 		change++;
 		
+		// debug.setText(methodSelected);
+		
 		/* OK, so now we need to iterate through the
 		 * method.  Changes are delimited by dots 
 		 * if necessary.  If an "x" or "-" is found,
@@ -441,59 +393,22 @@ public class MainActivity extends Activity {
 				/* That's all! */
 				change = 0;
 				return;
-			} else
-			/* In this case, we need to know if a full lead was given.
-			 * If the lead is symmetrical, then we need to reverse
-			 * the instructions to get treble back to lead.
-			 */
-			switch (bells[0].getPlace()) {
-			case 1:
-				/* Complete instructions, we simply restart the
-				 * method until we get back to rounds.
-				 */
+			} else {
+				/* Not in rounds, so we restart the method. */
 				methodPosition = 0;
-				break; /* Will now continue to change */
-			default:
-				/* Houston, we have a problem...? */
-				methodPosition = 0;
-				String order = new String();
-				for (int i = 0; i < getNumberOfBells(); i++) {
-					for (Bell b : bells) {
-						if (i+1 == b.getPlace()) {
-							int num = b.getNumber();
-							switch (num) {
-							case 10:
-								order += "0";
-								break;
-							case 11:
-								order += "E";
-								break;
-							case 12:
-								order += "T";
-								break;
-							default:
-								order += String.valueOf(num);
-								break;
-							}
-						}
-					}
-				}
-				debug.setText("Uh, run out, no lead end????" + order);
-				ringHandler.removeCallbacks(ringHandlerRun);
-				return;
 			}
 		}
 		
 /*		Debug section to show the order of bells. */
-/* 		String order = new String();
+ 		String order = new String();
 		for (int i = 0; i < getNumberOfBells(); i++) {
 			for (Bell b : bells) {
 				if (i+1 == b.getPlace())
 					order += String.valueOf(b.getNumber()) + " ";
 			}
 		}
-		debug.setText(order);
-*/
+		// debug.setText(order);
+
 		switch (methodSelected.charAt(methodPosition)) {
 		case ' ':
 		case 'l':
@@ -597,6 +512,10 @@ public class MainActivity extends Activity {
 	    case R.id.action_settings:
 	        startActivity(new Intent(this, PreferencesActivity.class));
 	        return true;
+	    case R.id.updatedb:
+	    	Method methods = new Method(this);
+	    	methods.updateDb(getNumberOfBells());
+	    	return true;
 	    default:
 	        return super.onOptionsItemSelected(item);
 	    }

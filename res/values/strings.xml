@@ -9,5 +9,6 @@
     <string name="hello_world">Hello world!</string>
     <string name="timer_name">net.bayofrum.belldroid.timer</string>
     <string name="number_of_bells">Number of bells</string>
+    <string name="update_database">Update method database</string>
 
 </resources>
