@@ -41,6 +41,7 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int action_settings=0x7f0b0002;
         public static final int debug=0x7f0b0000;
         public static final int mainTable=0x7f0b0001;
+        public static final int updatedb=0x7f0b0003;
     }
     public static final class layout {
         public static final int activity_main=0x7f030000;
@@ -57,6 +58,7 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int number_of_bells=0x7f080007;
         public static final int timer_name=0x7f080006;
         public static final int title_activity_main=0x7f080003;
+        public static final int update_database=0x7f080008;
     }
     public static final class style {
         /** 

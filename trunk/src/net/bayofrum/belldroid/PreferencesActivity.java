@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.preference.ListPreference;
+import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 
@@ -16,6 +17,8 @@ public class PreferencesActivity extends PreferenceActivity {
 	 * http://stackoverflow.com/questions/2542938/sharedpreferences-onsharedpreferencechangelistener-not-being-called-consistently
 	 */
 	private OnSharedPreferenceChangeListener prefchangelistener;
+	
+	private Method methods;
 	
 	/** Called when the activity is first created. */
 	@SuppressWarnings("deprecation")
@@ -38,7 +41,21 @@ public class PreferencesActivity extends PreferenceActivity {
 			}
 		};
 		
+		methods = new Method(getBaseContext());
+		
 	    register_changelistener();
+	    
+/*	    Preference updateDb = findPreference("update_db");
+	    updateDb.setOnPreferenceClickListener(
+	    		new Preference.OnPreferenceClickListener() {
+			
+			@Override
+			public boolean onPreferenceClick(Preference preference) {
+				update_method_db();
+				return true;
+			}
+		});
+*/
 	}
 	
 	@Override
@@ -63,26 +80,13 @@ public class PreferencesActivity extends PreferenceActivity {
 		ArrayList<CharSequence> names = new ArrayList<CharSequence>();
 		ArrayList<CharSequence> notation = new ArrayList<CharSequence>();
 	    
-		/* If it's an even number of bells, also allow tenor behind
-		 * methods; e.g. with 6, allow Doubles and Minor methods to
-		 * be selected.
-		 */
-		
-	    if ((numBells & 1) == 0) {
-	    	for (CharSequence s[] : MainActivity.methods[numBells - 1]) {
-	    		names.add(s[0]);
-	    		notation.add(s[1]);
-	    	}
-	    }
-		
-		for (CharSequence s[] : MainActivity.methods[numBells]) {
-	    	names.add(s[0]);
-	    	notation.add(s[1]);
-	    }
-	    
+		for (CharSequence s[] : methods.returnAll(numBells)) {
+			names.add(s[0]);
+			notation.add(s[1]);
+		}
+	
 	    methodpref.setEntries(names.toArray(new CharSequence[0]));
 	    methodpref.setEntryValues(notation.toArray(new CharSequence[0]));
-	    methodpref.setDefaultValue(methodpref.getEntries()[0]);
 	}
 
 	private void set_method_prefs(String s) {
@@ -111,4 +115,11 @@ public class PreferencesActivity extends PreferenceActivity {
 	private void set_my_bell(String s) {
 		set_my_bell(Integer.parseInt(s));
 	}
+	
+/*	private void update_method_db() {
+		int numBells = Integer.parseInt(
+				spref.getString("number_of_bells", "6"));
+		methods.updateDb(numBells);
+	}
+*/
 }
