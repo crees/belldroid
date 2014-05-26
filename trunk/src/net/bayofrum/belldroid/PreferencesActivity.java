@@ -12,7 +12,7 @@ import android.preference.PreferenceManager;
 public class PreferencesActivity extends PreferenceActivity {
 
 	private SharedPreferences spref;
-	/* Totally unbelieveable.  You have to read this!
+	/* Totally unbelievable.  You have to read this!
 	 * http://stackoverflow.com/questions/2542938/sharedpreferences-onsharedpreferencechangelistener-not-being-called-consistently
 	 */
 	private OnSharedPreferenceChangeListener prefchangelistener;
@@ -127,11 +127,11 @@ public class PreferencesActivity extends PreferenceActivity {
 	    	entries.add(String.valueOf(i+1));
 	    }
 	    
-	    entries.add("None");
+	    entries.add("None-- call changes");
 	    
 	    myBell.setEntries(entries.toArray(new CharSequence[0]));
 	    myBell.setEntryValues(entries.toArray(new CharSequence[0]));
-	    myBell.setDefaultValue("None");
+	    myBell.setDefaultValue("None-- call changes");
 	}
 	
 	private void set_my_bell(String s) {

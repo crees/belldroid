@@ -17,8 +17,19 @@
     <EditTextPreference
         android:title="Peal time in minutes"
         android:key="peal_time"
-        android:defaultValue="180" />
-    <SwitchPreference android:key="simulator" android:summaryOff="No delay" android:title="Delay bell's strike sound" android:summaryOn="Delay"/>
+        android:defaultValue="180"
+        android:numeric="integer" />
+    <SwitchPreference android:key="simulator"
+        android:summaryOff="No delay"
+		android:title="Delay bell's strike sound"
+		android:summaryOn="Delay"/>
+    <SwitchPreference android:key="calling_up"
+        android:summaryOff="Calling down"
+		android:title="Calling style"
+		android:summaryOn="Calling up" 
+		android:switchTextOn="UP"
+		android:switchTextOff="DOWN" 
+		android:defaultValue="true" />
 <!--<Preference android:key="update_db" android:title="Update method database" />
 -->
 </PreferenceScreen>
