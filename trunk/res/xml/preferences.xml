@@ -9,6 +9,9 @@
         android:key="my_bell"
         android:title="My bell" />
     <ListPreference
+        android:key="method_class"
+        android:title="Method class" />
+    <ListPreference
         android:key="selected_method"
         android:title="Method" />
     <EditTextPreference
