@@ -47,6 +47,12 @@ public class MainActivity extends Activity {
 	private boolean standing = false;
 	
 	private Bell[] bells = new Bell[maxNumberOfBells];
+	private Bell toMoveDown = null, toMoveUp = null;
+	
+	/* String to show the original state before method starts;
+	 * not necessarily rounds.
+	 */
+	private String originalState = new String();
 	
 	private Handler ringHandler = new Handler();
 	private Runnable ringHandlerRun = new Runnable() {
@@ -61,35 +67,72 @@ public class MainActivity extends Activity {
 		@Override
 		public void onClick(View arg0) {
 			Bell bell = (Bell) arg0;
-			if (bell.getNumber() != getUserBell())
-				return;
-			int msec = (int)(System.nanoTime() - elapsedTime) / 1000000;
-			bell.ring(ringHandler, sprefs.getBoolean("simulator", false) ?
-					delayBeforeStriking : 0);
-			/* Are we on time? Check first for ringing way out, before the
-			 * previous blow or after the next blow */
-			if (bell.getPlace() > place) {
-				debug.setText("Way too early! %score: " +
-						scoreTotal / ++scoreOverRounds);
-				return;
-			} else if (bell.getPlace() + 1 < place) {
-				debug.setText("Way too wide! %score: " +
-						scoreTotal / ++scoreOverRounds);
-				return;
+			if (bell.getNumber() == getUserBell())
+			{
+				int msec = (int)(System.nanoTime() - elapsedTime) / 1000000;
+				bell.ring(ringHandler, sprefs.getBoolean("simulator", false) ?
+						delayBeforeStriking : 0);
+				/* Are we on time? Check first for ringing way out, before the
+				 * previous blow or after the next blow */
+				if (bell.getPlace() > place) {
+					debug.setText("Way too early! %score: " +
+							scoreTotal / ++scoreOverRounds);
+					return;
+				} else if (bell.getPlace() + 1 < place) {
+					debug.setText("Way too wide! %score: " +
+							scoreTotal / ++scoreOverRounds);
+					return;
+				}
+	
+				int blowTime = getBlowTime();
+				int percentOff = ((msec - blowTime) * 100) / blowTime;
+				scoreTotal += 100 - Math.abs(percentOff);
+				if (Math.abs(percentOff) < 10)
+					debug.setText("Very good! %score:" +
+							scoreTotal / ++scoreOverRounds);
+				else if (percentOff > 0)
+					debug.setText("Try a little earlier, %score: " +
+							scoreTotal / ++scoreOverRounds);
+				else
+					debug.setText("Try a little wider, %score: " +
+							scoreTotal / ++scoreOverRounds);
+			} else if (getUserBell() == 0) {
+				/* Just calling! */
+				if (callingUp()) {
+					/* Last bell?? Can't move that up... */
+					if (bell.getPlace() == getNumberOfBells())
+						return;
+					for (int i = 0; i < getNumberOfBells(); i++) {
+						if (bell.getPlace() + 1 == bells[i].getPlace()) {
+							toMoveDown = bells[i];
+							toMoveUp = bell;
+							debug.setText(toMoveUp.getName()
+									+ " to " + toMoveDown.getName() + "!");
+							break;
+						}
+					}
+				} else {
+					/* Leading bell?? Can't move that down... */
+					if (bell.getPlace() == 1)
+						return;
+					Bell toFollow = null;
+					for (int i = 0; i< getNumberOfBells(); i++) {
+						if (bell.getPlace() == bells[i].getPlace() + 2)
+							toFollow = bells[i];
+						if (bell.getPlace() - 1 == bells[i].getPlace()) {
+							toMoveUp = bells[i];
+							toMoveDown = bell;
+							break;
+						}
+					}
+					/* Calling down is annoying-- special calls to lead. */
+					if (bell.getPlace() == 2)
+						debug.setText(bell.getName() + " lead!");
+					else if (toFollow != null)
+						debug.setText(bell.getName() + " to " +
+								toFollow.getName() + "!");
+				}
 			}
-
-			int blowTime = getBlowTime();
-			int percentOff = ((msec - blowTime) * 100) / blowTime;
-			scoreTotal += 100 - Math.abs(percentOff);
-			if (Math.abs(percentOff) < 10)
-				debug.setText("Very good! %score:" +
-						scoreTotal / ++scoreOverRounds);
-			else if (percentOff > 0)
-				debug.setText("Try a little earlier, %score: " +
-						scoreTotal / ++scoreOverRounds);
-			else
-				debug.setText("Try a little wider, %score: " +
-						scoreTotal / ++scoreOverRounds);
 		}
 	};
 	
@@ -109,7 +152,7 @@ public class MainActivity extends Activity {
 		PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 		sprefs = PreferenceManager.getDefaultSharedPreferences(this);
 		debug = (TextView)findViewById(R.id.debug);
-
+		draw_bells();
 	}
 	
 	public int getNumberOfBells() {
@@ -293,6 +336,11 @@ public class MainActivity extends Activity {
 			if ((getUserBell() == 1 ? bells[1] : bells[0]).atHandStroke()) {
 				if (standing == true) {
 					standing = false;
+					methodPosition = 0;
+					change = 0;
+					/* Might as well go back to rounds */
+					for (int i = 0; i < getNumberOfBells(); i++)
+						bells[i].setPlace(i + 1);
 					onPause();
 				}
 				return;
@@ -322,9 +370,10 @@ public class MainActivity extends Activity {
 	}
 	
 	private int getUserBell() {
-		String userBellString = sprefs.getString("my_bell", "None");
+		String userBellString = sprefs.getString("my_bell", "None-- call changes");
 		
-		if (userBellString.equals("None"))
+		if (userBellString.equals("None-- call changes") || 
+				userBellString.equals("None" /* Compat for before 0.3 */))
 			return 0;
 		else
 			return Integer.parseInt(userBellString);
@@ -356,17 +405,49 @@ public class MainActivity extends Activity {
 		return blow_milliseconds; /* Int preference??? */
 	}
 	
+	private boolean callingUp() {
+		return sprefs.getBoolean("calling_up", true);
+	}
+	
 	private void moveBellsAround() {
 		/* No error checking!!! Please make sure
 		 * your method is correct...
 		 */
+
+		/* Let's do call changes first */
+		if (toMoveDown != null && toMoveUp != null && bells[0].atHandStroke()) {
+			toMoveDown.moveDown();
+			toMoveUp.moveUp();
+			debug.setText("");
+			toMoveDown = toMoveUp = null;
+		}
+		
 		switch (change) {
 		case 0:
-			return; /* Still in rounds */
+			return; /* Still in original state (usually rounds) */
 		case 1:
 			/* We need to check that we start at handstroke. */
 			if (bells[0].atBackStroke())
 				return;
+			/* Now we record the original state, probably rounds */
+			originalState = "";
+			for (int i = 0; i < getNumberOfBells(); i++) {
+				int p = bells[i].getPlace();
+				switch(p) {
+				case 12:
+					originalState += "T";
+					break;
+				case 11:
+					originalState += "E";
+					break;
+				case 10:
+					originalState += "0";
+					break;
+				default:
+					originalState += String.valueOf(p);
+					break;
+				}
+			}
 		}
 		change++;
 		
@@ -383,13 +464,30 @@ public class MainActivity extends Activity {
 		SortedSet<Integer> exceptions = new TreeSet<Integer>();
 		
 		if (methodPosition >= methodSelected.length()) {
-			/* Instructions finished.  Are we in rounds? */
-			Boolean rounds = true;
-			for (int p = 1; p < getNumberOfBells() + 1; p++) {
-				if (bells[p-1].getPlace() != p)
-					rounds = false;
+			/* Instructions finished.  Are we in the original state? */
+			boolean origState = true;
+			for (int i = 0; i < getNumberOfBells(); i++) {
+				int p;
+				char s = originalState.charAt(i);
+				/* Parse the original state */
+				switch (s) {
+				case 'T':
+					p = 12;
+					break;
+				case 'E':
+					p = 11;
+					break;
+				case '0':
+					p = 10;
+					break;
+				default:
+					p = Integer.parseInt(String.valueOf(s));
+					break;
+				}
+				if (bells[i].getPlace() != p)
+					origState = false;
 			}
-			if (rounds) {
+			if (origState) {
 				/* That's all! */
 				change = 0;
 				return;
@@ -531,6 +629,7 @@ public class MainActivity extends Activity {
 	@Override
 	public void onResume() {
 		super.onResume();
+		/* Only need to reset because of changes in bells preferences */
 		draw_bells();
 	}
 }

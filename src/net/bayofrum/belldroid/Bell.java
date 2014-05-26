@@ -63,6 +63,14 @@ public class Bell extends Button {
 		return this.bellNumber;
 	}
 	
+	public String getName() {
+		final String[] bellNames = {
+				".", "One", "Two", "Three", "Four", "Five", "Six",
+				"Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve",
+		};
+		return bellNames[this.bellNumber];
+	}
+	
 	public int getPlace() {
 		return this.place;
 	}
