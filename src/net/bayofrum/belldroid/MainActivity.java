@@ -33,7 +33,7 @@ public class MainActivity extends Activity {
 	 * Also necessary will be modification of the regex (BOTH!) in
 	 * moveBellsAround and adding cases for the letters.
 	 * As well, add a line to methods for each new bell, and in Preferences
-	 * array too.
+	 * array too, and Methods class for the names of the stages.
 	 */
 	private static final int maxNumberOfBells = 12;
 	private static final int delayBeforeStriking = 1000;
@@ -400,7 +400,8 @@ public class MainActivity extends Activity {
 		}
 		
 /*		Debug section to show the order of bells. */
- 		String order = new String();
+ 		@SuppressWarnings("unused")
+		String order = new String();
 		for (int i = 0; i < getNumberOfBells(); i++) {
 			for (Bell b : bells) {
 				if (i+1 == b.getPlace())
