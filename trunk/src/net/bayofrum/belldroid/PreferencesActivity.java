@@ -1,3 +1,29 @@
+/*-
+ * Copyright (c) 2014, Chris Rees
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *    
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 package net.bayofrum.belldroid;
 
 import java.util.ArrayList;
@@ -12,29 +38,23 @@ import android.preference.PreferenceManager;
 public class PreferencesActivity extends PreferenceActivity {
 
 	private SharedPreferences spref;
-	/* Totally unbelievable.  You have to read this!
+	/**
+	 * Totally unbelievable.  You have to read this!
 	 * http://stackoverflow.com/questions/2542938/sharedpreferences-onsharedpreferencechangelistener-not-being-called-consistently
 	 */
 	private OnSharedPreferenceChangeListener prefchangelistener;
 	
 	private Method methods;
 	
-	/** Called when the activity is first created. */
 	@SuppressWarnings("deprecation")
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
-	    /* Might crash without next line ?? */
-//	    PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+	    /* XXX Might crash without next line ?? */
+	    // PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 	    addPreferencesFromResource(R.xml.preferences);
 	    spref = PreferenceManager.getDefaultSharedPreferences(this);
 	    
-	    // Dead code below; objects meaning number of bells,
-	    // was supposed to make dependency easier.  Probably pointless.
-/*	    lprefs.add(new LPref("number_of_bells", "6"));
-	    lprefs.add(new LPref("my_bell", "None"));
-	    lprefs.add(new LPref("selected_method", ""));
-*/	    
 		prefchangelistener = new OnSharedPreferenceChangeListener() {
 			@Override
 			public void onSharedPreferenceChanged(SharedPreferences s,
@@ -136,52 +156,5 @@ public class PreferencesActivity extends PreferenceActivity {
 	
 	private void set_my_bell(String s) {
 		set_my_bell(Integer.parseInt(s));
-	}
-	
-	// The LPref class below is probably useless
-	
-	@SuppressWarnings("unused")
-	private class LPref {
-		
-		private final ListPreference me;
-		private final String name, def;
-		private ArrayList<ListPreference> dependencies = 
-				new ArrayList<ListPreference>();
-		
-		/** Make a preference with no dependencies */
-		@SuppressWarnings("deprecation")
-		public LPref(String name, String def) {
-			this.name = name;
-			this.def = def;
-			me = (ListPreference) findPreference(this.name);
-		}
-		
-		public String getName() {
-			return name;
-		}
-		
-		public String getValue() {
-			return spref.getString(this.name, this.def);
-		}
-		
-		public int getInt() {
-			return Integer.parseInt(getValue());
-		}
-		
-		public void addDependency(ListPreference dependency) {
-			dependencies.add(dependency);
-		}
-		
-		public void setEntries(ArrayList<CharSequence> entries,
-				ArrayList<CharSequence> entryValues) {
-			this.setEntries(entries.toArray(new CharSequence[0]),
-				entryValues.toArray(new CharSequence[0]));
-		}
-		
-		public void setEntries(CharSequence[] entries,
-				CharSequence[] entryValues) {
-			me.setEntries(entries);
-			me.setEntryValues(entryValues);
-		}
 	}
 }

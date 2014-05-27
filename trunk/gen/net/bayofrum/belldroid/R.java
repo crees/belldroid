@@ -39,8 +39,8 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
     }
     public static final class id {
         public static final int action_settings=0x7f0b0002;
-        public static final int debug=0x7f0b0000;
         public static final int mainTable=0x7f0b0001;
+        public static final int notify_area=0x7f0b0000;
         public static final int updatedb=0x7f0b0003;
     }
     public static final class layout {
