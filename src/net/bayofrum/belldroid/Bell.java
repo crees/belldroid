@@ -1,3 +1,29 @@
+/*-
+ * Copyright (c) 2014, Chris Rees
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *    
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 package net.bayofrum.belldroid;
 
 import java.io.IOException;
@@ -18,8 +44,8 @@ public class Bell extends Button {
 	private final int bellNumber;
 	
 	private int place;
-	public enum Stroke { hand, back };
-	private Stroke stroke = Stroke.hand;
+	public enum Stroke { HAND, BACK };
+	private Stroke stroke = Stroke.HAND;
 
 	public final int soundId;
 	private final SoundPool soundPool;
@@ -38,6 +64,10 @@ public class Bell extends Button {
 	public Bell(Context context, int bellNumber, int maxNumberOfBells,
 			int numberOfBells, SoundPool soundPool) {
 		super(context);
+
+		AssetManager assets = context.getAssets();
+		int soundId = 0;
+
 		this.bellNumber = bellNumber;
 		this.soundPool = soundPool;
 		place = this.bellNumber;
@@ -45,8 +75,6 @@ public class Bell extends Button {
 		this.setGravity(
 				Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);		
 		this.setClickable(true);
-		int soundId = 0;
-		AssetManager assets = context.getAssets();
 		try {
 			AssetFileDescriptor soundfile = assets.openFd("piano-based/" +
 					String.valueOf(
@@ -59,63 +87,115 @@ public class Bell extends Button {
 		this.soundId = soundId;
 	}
 	
+	/**
+	 * Returns the number of this Bell as int.
+	 * 
+	 * @return the number of this Bell, starting with 1.
+	 */
 	public int getNumber() {
 		return this.bellNumber;
 	}
 	
+	/**
+	 * Returns the name of this Bell as a String;
+	 * capitalised as a proper noun.
+	 * 
+	 * @return the name of this Bell.
+	 */
 	public String getName() {
 		final String[] bellNames = {
 				".", "One", "Two", "Three", "Four", "Five", "Six",
 				"Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve",
 		};
+
 		return bellNames[this.bellNumber];
 	}
 	
+	/**
+	 * Returns the place value of this Bell
+	 * as an int.
+	 * 
+	 * @return the place value, starting with 1.
+	 */
 	public int getPlace() {
 		return this.place;
 	}
 	
+	/**
+	 * Sets the place value of this Bell
+	 * as int.
+	 * 
+	 * @param p the place value of this Bell, starting with 1.
+	 */
 	public void setPlace(int p) {
 		this.place = p;
 	}
 	
+	/**
+	 * Returns true if this Bell is at handstroke.
+	 * 
+	 * @return true at handstroke, false at backstroke.
+	 */
 	public boolean atHandStroke() {
-		return this.stroke == Stroke.hand;
+		return this.stroke == Stroke.HAND;
 	}
 	
+	/**
+	 * Returns true if this Bell is at backstroke.
+	 * 
+	 * @return true at backstroke, false at handstroke.
+	 */
 	public boolean atBackStroke() {
-		return this.stroke == Stroke.back;
+		return this.stroke == Stroke.BACK;
 	}
 	
+	/**
+	 * Moves this Bell's place up by one.
+	 * 
+	 * The programmer is responsible for finding
+	 * the previous Bell to moveDown().
+	 */
 	public void moveUp() {
 		this.place++;
 	}
 	
+	/**
+	 * Moves this Bell's place down by one.
+	 * 
+	 * The programmer is responsible for finding
+	 * the next Bell to moveUp().
+	 */
 	public void moveDown() {
 		this.place--;
 	}
 	
+	/**
+	 * Rings this Bell, resulting in a switch of Stroke,
+	 * and a change in colour to represent that.
+	 * 
+	 * @param bonger	Handler for scheduling the sound.  Pass null for silence.
+	 * @param delay		Delay between Stroke and sound.
+	 * @return			the place value of the Bell.
+	 */
 	public int ring(Handler bonger, int delay) {
 		switch (stroke) {
-		case hand:
+		case HAND:
 			this.setTextColor(Color.RED);
-			stroke = Stroke.back;
+			stroke = Stroke.BACK;
 			break;
-		case back:
+		case BACK:
 			this.setTextColor(Color.BLACK);
-			stroke = Stroke.hand;
+			stroke = Stroke.HAND;
 			break;
 		}
-
-		// Bong!
-		bonger.postDelayed(new Runnable() {
-			@Override
-			public void run() {
-				soundPool.play(soundId, 0.99f, 0.99f, 1, 0, 1.0f);
-			}
-		}, delay);
-
+		if (bonger != null) {
+			bonger.postDelayed(new Runnable() {
+				@Override
+				public void run() {
+					soundPool.play(soundId, 0.99f, 0.99f, 1, 0, 1.0f);
+				}
+			}, delay);
+		}
 		return place;
 	}
-	
 }

@@ -3,7 +3,7 @@
     android:layout_height="fill_parent"
     android:orientation="vertical" >
    	<TextView
-   	    android:id="@+id/debug"
+   	    android:id="@+id/notify_area"
    	    android:layout_width="fill_parent"
    	    android:layout_height="wrap_content"
    	    android:text="" />
