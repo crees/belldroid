@@ -82,7 +82,7 @@ public class Method extends SQLiteOpenHelper {
 	public static final String COLUMN_NOTATION = "notation";
 
 	private static final String DATABASE_NAME = "methods.db";
-	private static final int DATABASE_VERSION = 1;
+	private static final int DATABASE_VERSION = 2;
 
 	private static final String DATABASE_CREATE = "create table "
 	    + TABLE_METHODS + "(" + 
@@ -256,7 +256,7 @@ public class Method extends SQLiteOpenHelper {
 	/** Just drop and recreate the table */
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-		db.execSQL("DROP IF EXISTS " + TABLE_METHODS);
+		db.execSQL("DROP TABLE IF EXISTS " + TABLE_METHODS);
 		onCreate(db);
 	}
 	
@@ -339,12 +339,7 @@ public class Method extends SQLiteOpenHelper {
 									
 									if ("symblock".equals(parser.getName())) {
 										parser.next();
-										String second = parser.getText();
-										if (second.length() < method[3].length()) {
-											method[3] += " lh " + second;
-										} else {
-											method[3] = second + " lh " + method[3];
-										}
+										method[3] += " lh " + parser.getText();
 									}
 									break;
 								}

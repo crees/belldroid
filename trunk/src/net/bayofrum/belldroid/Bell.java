@@ -50,6 +50,19 @@ public class Bell extends Button {
 	public final int soundId;
 	private final SoundPool soundPool;
 	
+	public static int charToInt(char c) {
+		switch (c) {
+		case '0':
+			return 10;
+		case 'E':
+			return 11;
+		case 'T':
+			return 12;
+		default:
+			return c - '0';
+		}
+	}
+	
 	/**
 	 * Returns a Bell object, based on TextView.  Best
 	 * stored as a ring of bells; e.g. Bell[] bells.
@@ -120,7 +133,26 @@ public class Bell extends Button {
 	public int getPlace() {
 		return this.place;
 	}
+
 	
+	/**
+	 * Returns the place value of this Bell
+	 * as a character, with single digits, 10->0, 11->E, 12->T
+	 */
+	public char getPlaceAsChar() {
+		int p = this.getPlace();
+		switch(p) {
+		case 12:
+			return 'T';
+		case 11:
+			return 'E';
+		case 10:
+			return '0';
+		default:
+			return Integer.toString(p).charAt(0);
+		}
+	}
+
 	/**
 	 * Sets the place value of this Bell
 	 * as int.
