@@ -529,21 +529,7 @@ public class MainActivity extends Activity {
 			/* Now we record the original state, probably rounds */
 			originalState = "";
 			for (int i = 0; i < getNumberOfBells(); i++) {
-				int p = bells[i].getPlace();
-				switch(p) {
-				case 12:
-					originalState += "T";
-					break;
-				case 11:
-					originalState += "E";
-					break;
-				case 10:
-					originalState += "0";
-					break;
-				default:
-					originalState += String.valueOf(p);
-					break;
-				}
+				originalState += String.valueOf(bells[i].getPlaceAsChar());
 			}
 		}
 		change++;
@@ -564,25 +550,10 @@ public class MainActivity extends Activity {
 			/* Instructions finished.  Are we in the original state? */
 			boolean origState = true;
 			for (int i = 0; i < getNumberOfBells(); i++) {
-				int p;
-				char s = originalState.charAt(i);
 				/* Parse the original state */
-				switch (s) {
-				case 'T':
-					p = 12;
-					break;
-				case 'E':
-					p = 11;
-					break;
-				case '0':
-					p = 10;
-					break;
-				default:
-					p = Integer.parseInt(String.valueOf(s));
-					break;
-				}
-				if (bells[i].getPlace() != p)
+				if (bells[i].getPlaceAsChar() != originalState.charAt(i)) {
 					origState = false;
+				}
 			}
 			if (origState) {
 				/* That's all! */
@@ -595,7 +566,7 @@ public class MainActivity extends Activity {
 		}
 		
 		/* Debug section to show the order of bells. */
- 		@SuppressWarnings("unused")
+/* 		@SuppressWarnings("unused")
 		String order = new String();
 		for (int i = 0; i < getNumberOfBells(); i++) {
 			for (Bell b : bells) {
@@ -603,8 +574,10 @@ public class MainActivity extends Activity {
 					order += String.valueOf(b.getNumber()) + " ";
 			}
 		}
-		// debug.setText(order);
-
+		notifyArea.setText(methodSelected.substring(0, methodPosition+1) + ">" +
+				methodSelected.substring(methodPosition+1, methodSelected.length())
+				+ " | " + order);
+*/
 		switch (methodSelected.charAt(methodPosition)) {
 		case ' ':
 		case 'l':
@@ -614,14 +587,13 @@ public class MainActivity extends Activity {
 			 * the first instruction and then append them to the method.
 			 * Could definitely use some error checking....
 			 */
-			Pattern e = Pattern.compile("^((.*)[-x]|(.*[-x.])[0-9ET]+) ?l[he] ?([0-9ET]+)$");
+			Pattern e = Pattern.compile("^([^ l]+) ?l[he] ?([-x.0-9ET]+)$");
 			Matcher m = e.matcher(methodSelected);
 			m.find();
-			String methodBody = m.group(m.group(2) != null ? 2 : 3);
 			/* We don't really need to worry about extra dots */
 			methodSelected = m.group(1) +
-					new StringBuilder(methodBody).reverse().toString() +
-					"." + m.group(4); /* Lead end */
+					allButLastChangeAndReverse(m.group(1)) +
+					"." + getLeadHead(m.group(2));
 			moveBellsAround(); /* Recurse */
 			return;
 		case '-':
@@ -654,22 +626,51 @@ public class MainActivity extends Activity {
 		methodPosition += matcher.end();
 		for (char c : matcher.group().toCharArray()) {
 			/* What a faff! We must first try bells 10-12 */	
-			switch (c) {
-			case '0':
-				exceptions.add(10);
-				break;
-			case 'E':
-				exceptions.add(11);
-				break;
-			case 'T':
-				exceptions.add(12);
-				break;
-			default:
-				exceptions.add(c - '0');
-				break;
-			}
+			exceptions.add(Bell.charToInt(c));
 		}
 		swapAllBellsExcept(exceptions);
+	}
+	
+	/**
+	 * Take a section of a method, and strips off just the last change.
+	 * If it is simply one change, return nothing.
+	 * 
+	 * @param m method from which to strip the final change
+	 * @return the method missing the last change
+	 */
+	
+	private String allButLastChangeAndReverse(String m) {
+		String ret = new String();
+		if (m.matches(".*[-.x].*")) {
+			Matcher stripper = Pattern.compile("^(.*[-x.])[0-9ET]+|(.*)[-x]$").matcher(m);			
+			stripper.find();
+			ret = stripper.group(stripper.group(1) != null ? 1 : 2);
+		} else {
+			/* Just one change, no stripping to do here */
+			ret = "";
+		}
+		
+		return new StringBuilder(ret).reverse().toString();
+	}
+
+	/**
+	 * Sometimes the lead head isn't just one change... we
+	 * must process it as with the method body.  If it's one
+	 * change, just return it as-is
+	 * 
+	 * @param lh lead head to process
+	 * @return a processed lead head
+	 */
+	private String getLeadHead(String lh) {
+		String ret = new String();
+		if (lh.matches(".*[-.x].*")) {
+			/* Multiple changes... we should return the whole thing plus
+			 * reverse and stripped */
+			ret = lh + "." + allButLastChangeAndReverse(lh);
+		} else {
+			ret = lh;
+		}
+		return ret;
 	}
 	
 	/**
