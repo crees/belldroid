@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+    <ListPreference
+        android:entries="@array/bellsAvailable"
+        android:entryValues="@array/bellsAvailable"
+        android:title="@string/number_of_bells"
+        android:key="number_of_bells" />
+    <ListPreference
+        android:key="my_bell"
+        android:title="My bell" />
+    <ListPreference
+        android:key="method_class"
+        android:title="Method class" />
+    <ListPreference
+        android:key="selected_method"
+        android:title="Method" />
+    <EditTextPreference
+        android:title="Peal time in minutes"
+        android:key="peal_time"
+        android:defaultValue="180"
+        android:numeric="integer" />
+    <SwitchPreference android:key="simulator"
+        android:summaryOff="No delay"
+		android:title="Delay bell's strike sound"
+		android:summaryOn="Delay"/>
+    <SwitchPreference android:key="handstroke_gap"
+        android:summaryOff="Cartwheeling"
+		android:title="Open handstroke lead (gap after tenor backstroke)"
+		android:summaryOn="Open handstroke lead" 
+		android:switchTextOn="OPEN"
+		android:switchTextOff="CLOSED" />
+    <SwitchPreference android:key="calling_up"
+        android:summaryOff="Calling down"
+		android:title="Calling style"
+		android:summaryOn="Calling up" 
+		android:switchTextOn="UP"
+		android:switchTextOff="DOWN" 
+		android:defaultValue="true" />
+<!--<Preference android:key="update_db" android:title="Update method database" />
+-->
+</PreferenceScreen>
