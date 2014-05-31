@@ -23,6 +23,12 @@
         android:summaryOff="No delay"
 		android:title="Delay bell's strike sound"
 		android:summaryOn="Delay"/>
+    <SwitchPreference android:key="handstroke_gap"
+        android:summaryOff="Cartwheeling"
+		android:title="Open handstroke lead (gap after tenor backstroke)"
+		android:summaryOn="Open handstroke lead" 
+		android:switchTextOn="OPEN"
+		android:switchTextOff="CLOSED" />
     <SwitchPreference android:key="calling_up"
         android:summaryOff="Calling down"
 		android:title="Calling style"

@@ -388,8 +388,11 @@ public class MainActivity extends Activity {
 					 * timer behind by one blow to score correctly.
 					 * Don't trust the Treble's stroke here, pick third!
 					 */
-					elapsedTime = System.nanoTime() - 
-							(bells[2].atBackStroke() ? getBlowTime() * 1000000 : 0);
+					if (bells[2].atHandStroke() && handstrokeGapEnabled()) {
+						elapsedTime = System.nanoTime();
+					} else {
+						elapsedTime = System.nanoTime() - getBlowTime() * 1000000;
+					}
 				}
 			} else {
 				userBellPlace = 0;
@@ -408,7 +411,9 @@ public class MainActivity extends Activity {
 					}
 					onPause();
 				}
-				return;
+				if (handstrokeGapEnabled()) {
+					return;
+				}
 			}
 		}
 		
@@ -495,6 +500,10 @@ public class MainActivity extends Activity {
 	 */
 	private boolean callingUp() {
 		return sprefs.getBoolean("calling_up", true);
+	}
+	
+	private boolean handstrokeGapEnabled() {
+		return sprefs.getBoolean("handstroke_gap", true);
 	}
 	
 	/**
