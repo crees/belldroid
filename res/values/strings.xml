@@ -10,5 +10,9 @@
     <string name="timer_name">net.bayofrum.belldroid.timer</string>
     <string name="number_of_bells">Number of bells</string>
     <string name="update_database">Update method database</string>
+    <string name="my_bell">My Bell</string>
+    <string name="method_class">Method class</string>
+    <string name="method">Method</string>
+    <string name="peal_time_minutes">Peal time in minutes</string>
 
 </resources>

@@ -55,7 +55,11 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int dummy_button=0x7f080001;
         public static final int dummy_content=0x7f080002;
         public static final int hello_world=0x7f080005;
+        public static final int method=0x7f08000b;
+        public static final int method_class=0x7f08000a;
+        public static final int my_bell=0x7f080009;
         public static final int number_of_bells=0x7f080007;
+        public static final int peal_time_minutes=0x7f08000c;
         public static final int timer_name=0x7f080006;
         public static final int title_activity_main=0x7f080003;
         public static final int update_database=0x7f080008;
