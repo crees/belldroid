@@ -7,15 +7,15 @@
         android:key="number_of_bells" />
     <ListPreference
         android:key="my_bell"
-        android:title="My bell" />
+        android:title="@string/my_bell" />
     <ListPreference
         android:key="method_class"
-        android:title="Method class" />
+        android:title="@string/method_class" />
     <ListPreference
         android:key="selected_method"
-        android:title="Method" />
+        android:title="@string/method" />
     <EditTextPreference
-        android:title="Peal time in minutes"
+        android:title="@string/peal_time_minutes"
         android:key="peal_time"
         android:defaultValue="180"
         android:numeric="integer" />
@@ -36,6 +36,4 @@
 		android:switchTextOn="UP"
 		android:switchTextOff="DOWN" 
 		android:defaultValue="true" />
-<!--<Preference android:key="update_db" android:title="Update method database" />
--->
 </PreferenceScreen>

@@ -68,12 +68,12 @@ public class Method extends SQLiteOpenHelper {
 		};
 	
 	/** List of names of classes, as kept by ringing.org */
-	private static final String[] CLASS_NAMES = {
+/*	private static final String[] CLASS_NAMES = {
 		"Principle", "Plain", "Bob", "Place", "Treble%20Dodging",
 		"Treble%20Bob", "Surprise", "Delight", "Treble%20Place",
 		"Alliance", "Hybrid", "Slow%20Course",
 	};
-	
+*/	
 	public static final String TABLE_METHODS = "methods";
 	public static final String COLUMN_ID = "_id";
 	public static final String COLUMN_NAME = "name";
@@ -204,7 +204,6 @@ public class Method extends SQLiteOpenHelper {
 	 * 						a ListPreference
 	 */
 	public ArrayList<CharSequence[]> returnAll(int stage, String methodClass) {
-
 		ArrayList<CharSequence[]> m = new ArrayList<CharSequence[]>();
 		if ((stage & 1) == 0) {
 			m.addAll(this.returnAll(stage - 1, methodClass));
@@ -223,7 +222,7 @@ public class Method extends SQLiteOpenHelper {
 		}
 		
 		Cursor cursor = db.query(TABLE_METHODS, columns, where,
-				null, null, null, null);
+				null, null, null, COLUMN_NAME);
 
 		if (cursor != null) {
 			if (!cursor.moveToFirst()) {
@@ -270,16 +269,26 @@ public class Method extends SQLiteOpenHelper {
 
 			for (int num : numBells) {
 				methodarray = new ArrayList<String[]>();
-				for (String className : CLASS_NAMES) {
+				int page = 0;
+				boolean morepagescoming = true;
+				do {
 					try {
 						XmlPullParser parser = Xml.newPullParser();
 						URL url = new URL(
-								"http://methods.ringing.org/cgi-bin/simple.pl?performances/firsttower/date%3E1000&fields=name|classes|pn|title&stage="
-								+ Integer.toString(num) + "&classes=" +
-								className);
+								"http://methods.ringing.org/cgi-bin/simple.pl?pagesize=1000&fields=name|classes|pn|title&stage="
+								+ Integer.toString(num) + "&page=" + Integer.toString(++page));
 						InputStream input = url.openStream();
 						parser.setInput(input, null);
+						// ns_1:rows="8758"
 						int event = parser.next();
+						int attribute = 0;
+						while (! parser.getAttributeName(attribute).equals("rows")) {
+							attribute++;
+						}
+						int numberOfPages = Integer.parseInt(parser.getAttributeValue(attribute)) / 1000;
+						if (page > numberOfPages) {
+							morepagescoming = false;
+						}
 						while (event != XmlPullParser.END_DOCUMENT) {
 							String method[] = new String[4];
 							event = parser.next();
@@ -351,15 +360,16 @@ public class Method extends SQLiteOpenHelper {
 						input.close();
 					} catch (MalformedURLException e) {
 						e.printStackTrace();
+						break;
 					} catch (IOException e) {
 						// Not connected?  Just silently fail for now.
-						Log.w("Connection failed!", Integer.toString(num)+className);
+						Log.w("Connection failed!", Integer.toString(num));
 						return null;
 					} catch (XmlPullParserException e) {
 						e.printStackTrace();
+						break;
 					}
-				}
-
+				} while (morepagescoming);
 				db.delete(TABLE_METHODS,
 						COLUMN_STAGE + "=" +
 						Integer.toString(num), null);
