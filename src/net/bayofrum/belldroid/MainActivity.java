@@ -70,7 +70,15 @@ public class MainActivity extends Activity {
 	
 	/** Number of milliseconds to delay, when Delay is set. */
 	private static final int delayBeforeStriking = 1000;
-	
+
+    /** Values for the "My bell" integer */
+    private static final int BELL_CALL_CHANGES = 0;
+    private static final int BELL_POOR_STRIKING = -1;
+
+    private int bell_poor_striking = 0;
+    private int bell_poor_striking_difference = 0;
+    private int bell_poor_striking_percentage = 0;
+
 	/**
 	 * Keeps track.  Holds the place, special value 0 for before lead,
 	 * which is when places change and the handstroke gap is inserted.
@@ -164,7 +172,7 @@ public class MainActivity extends Activity {
 					notifyArea.setText("Try a little wider, %score: " +
 							scoreTotal / ++scoreOverRounds);
 				}
-			} else if (getUserBell() == 0) {
+			} else if (getUserBell() == BELL_CALL_CHANGES) {
 				/* Just calling! */
 				if (callingUp()) {
 					/* Last bell?? Can't move that up... */
@@ -203,7 +211,15 @@ public class MainActivity extends Activity {
 								toFollow.getName() + "!");
 					}
 				}
-			}
+			} else if (getUserBell() == BELL_POOR_STRIKING) {
+                if (bell.getNumber() == bell_poor_striking) {
+                    notifyArea.setText("Bell number " + bell.getName() + ", please " +
+                            (bell_poor_striking_percentage > 0 ? "pull in!" : "hold up!"));
+                    set_bell_poor_striking();
+                } else {
+                    notifyArea.setText("Actually, " + bell.getName() + " is striking correctly.");
+                }
+            }
 		}
 	};
 	
@@ -318,6 +334,8 @@ public class MainActivity extends Activity {
 						@Override
 						public void onClick(View v) {
 							ringHandler.removeCallbacks(ringHandlerRun);
+                            notifyArea.setText("");
+                            set_bell_poor_striking();
 							ringHandler.postDelayed(ringHandlerRun,
 									getBlowTime());
 						}
@@ -378,7 +396,7 @@ public class MainActivity extends Activity {
 		if (place == 0) {
 			place++;
 			moveBellsAround();
-			if (getUserBell() > 0 && getUserBell() < getNumberOfBells()) {
+			if (getUserBell() > 0 && getUserBell() <= getNumberOfBells()) {
 				userBellPlace = bells[getUserBell()-1].getPlace();
 				if (userBellPlace == 1) {
 					/* The user's bell is leading.
@@ -451,7 +469,9 @@ public class MainActivity extends Activity {
 		
 		if (userBellString.equals("None-- call changes") || 
 				userBellString.equals("None" /* Compat for before 0.3 */))
-			return 0;
+			return BELL_CALL_CHANGES;
+        else if (userBellString.equals("Choose the wrongly striking bell"))
+            return BELL_POOR_STRIKING;
 		else
 			return Integer.parseInt(userBellString);
 	}
@@ -490,9 +510,31 @@ public class MainActivity extends Activity {
 		 */
 		blow_milliseconds *= 2;
 		blow_milliseconds /= (getNumberOfBells() * 2 + 1);
-		
+
+        /* Last bell was held up too long/pulled in too quickly */
+        blow_milliseconds -= bell_poor_striking_difference;
+        bell_poor_striking_difference = 0;
+
+        /* Check to see if the next ringer is quick/slow */
+        if (getUserBell() == BELL_POOR_STRIKING) {
+            for (Bell b : bells) {
+                if (b.getPlace() == place + 1 && b.getNumber() == bell_poor_striking) {
+                    bell_poor_striking_difference = (int)(blow_milliseconds *
+                            0.01 * bell_poor_striking_percentage);
+                    blow_milliseconds += bell_poor_striking_difference;
+                    break;
+                }
+            }
+        }
 		return blow_milliseconds;
 	}
+
+    private void set_bell_poor_striking() {
+        bell_poor_striking =
+                (int)(Math.random() * (getNumberOfBells() - 2)) + 1;
+        bell_poor_striking_percentage = (Math.random() < 0.5 ? -1 : 1) *
+                Integer.parseInt(sprefs.getString("how_poor_striking", "0"));
+    }
 	
 	/**
 	 * Returns true if calling up is selected in preferences,

@@ -9,6 +9,9 @@
         android:key="my_bell"
         android:title="@string/my_bell" />
     <ListPreference
+        android:key="how_poor_striking"
+        android:title="Striking variance" />
+    <ListPreference
         android:key="method_class"
         android:title="@string/method_class" />
     <ListPreference

@@ -68,7 +68,10 @@ public class PreferencesActivity extends PreferenceActivity {
 				} else if (key.equals("method_class")) {
 					set_method_prefs(spref.getString("number_of_bells", "6"),
 							spref.getString("method_class", "none"));
-				}
+				} else if (key.equals("my_bell")) {
+                    set_how_poor_striking();
+                }
+
 			}
 		};
 		
@@ -88,7 +91,8 @@ public class PreferencesActivity extends PreferenceActivity {
 		String numBells = spref.getString("number_of_bells", "6");
 		set_method_classes(numBells);
 		set_my_bell(numBells);
-		set_method_prefs(numBells, spref.getString("method_class", "none"));
+		set_how_poor_striking();
+        set_method_prefs(numBells, spref.getString("method_class", "none"));
 	}
 	
 	private void set_method_classes(int numBells) {
@@ -148,7 +152,8 @@ public class PreferencesActivity extends PreferenceActivity {
 	    }
 	    
 	    entries.add("None-- call changes");
-	    
+	    entries.add("Choose the wrongly striking bell");
+
 	    myBell.setEntries(entries.toArray(new CharSequence[0]));
 	    myBell.setEntryValues(entries.toArray(new CharSequence[0]));
 	    myBell.setDefaultValue("None-- call changes");
@@ -157,4 +162,18 @@ public class PreferencesActivity extends PreferenceActivity {
 	private void set_my_bell(String s) {
 		set_my_bell(Integer.parseInt(s));
 	}
+
+    @SuppressWarnings("deprecation")
+    private void set_how_poor_striking() {
+        ListPreference striking =
+                (ListPreference)findPreference("how_poor_striking");
+
+        if (spref.getString("my_bell", "").equals("Choose the wrongly striking bell")) {
+            striking.setEnabled(true);
+            striking.setEntries(new CharSequence[]{"Large-- easy", "Medium", "Small-- tricky"});
+            striking.setEntryValues(new CharSequence[]{"50", "30", "15"});
+        } else {
+            striking.setEnabled(false);
+        }
+    }
 }
