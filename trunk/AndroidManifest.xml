@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="net.bayofrum.belldroid"
-    android:versionCode="5"
-    android:versionName="0.5" >
+    android:versionCode="6"
+    android:versionName="0.6" >
 
     <uses-sdk
         android:minSdkVersion="14"
@@ -22,8 +22,8 @@
             </intent-filter>
             
         </activity>
-        <activity android:name="net.bayofrum.belldroid.PreferencesActivity"></activity>
-        
+
+        <activity android:name="net.bayofrum.belldroid.PreferencesActivity" />
     </application>
 
 </manifest>
