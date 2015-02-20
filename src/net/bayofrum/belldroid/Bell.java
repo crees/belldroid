@@ -42,12 +42,27 @@ import android.widget.Button;
 public class Bell extends Button {
 
 	private final int bellNumber;
+    private final boolean PIANO_SOUNDS = false;
+
+    /** Starting on B natural, centihertz */
+    private final int BELL_FREQUENCIES[] = {
+            /* b    c#      d# */
+            49388,  55437,  62225,
+            /* e    f#      g# */
+            65925,  73999,  83061,
+            /* a#   b       c# */
+            93233,  98777,  110873,
+            /* d#   e       f# */
+            124451, 131851, 147998,
+    };
 	
 	private int place;
-	public enum Stroke { HAND, BACK };
+    private float rate = 1.0f;
 	private Stroke stroke = Stroke.HAND;
 
+    public enum Stroke { HAND, BACK };
 	public final int soundId;
+
 	private final SoundPool soundPool;
 	
 	public static int charToInt(char c) {
@@ -88,15 +103,26 @@ public class Bell extends Button {
 		this.setGravity(
 				Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);		
 		this.setClickable(true);
-		try {
-			AssetFileDescriptor soundfile = assets.openFd("piano-based/" +
-					String.valueOf(
-							bellNumber + maxNumberOfBells - numberOfBells
-					) + ".ogg");
-			soundId = soundPool.load(soundfile, 1);
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
+		if (PIANO_SOUNDS == true) {
+            try {
+                AssetFileDescriptor soundfile = assets.openFd("piano-based/" +
+                        String.valueOf(
+                                bellNumber + maxNumberOfBells - numberOfBells
+                        ) + ".ogg");
+                soundId = soundPool.load(soundfile, 1);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        } else {
+            try {
+                AssetFileDescriptor soundfile = assets.openFd("tower-bells/towerbell.wav");
+                soundId = soundPool.load(soundfile, 1);
+                rate = (float)BELL_FREQUENCIES[Math.abs(numberOfBells - bellNumber)] /
+                        (float)BELL_FREQUENCIES[6];
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        }
 		this.soundId = soundId;
 	}
 	
@@ -224,7 +250,7 @@ public class Bell extends Button {
 			bonger.postDelayed(new Runnable() {
 				@Override
 				public void run() {
-					soundPool.play(soundId, 0.99f, 0.99f, 1, 0, 1.0f);
+					soundPool.play(soundId, 0.99f, 0.99f, 1, 0, rate);
 				}
 			}, delay);
 		}
