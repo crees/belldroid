@@ -783,8 +783,14 @@ public class MainActivity extends Activity {
 	        return true;
 	    case R.id.updatedb:
 	    	Method methods = new Method(this);
+            Toast.makeText(this,
+                    "Methods are being updated, check the progress bar to see when done",
+                    Toast.LENGTH_LONG).show();
 	    	methods.updateDb(getNumberOfBells());
 	    	return true;
+        case R.id.action_help:
+            startActivity(new Intent(this, HelpActivity.class));
+            return true;
 	    default:
 	        return super.onOptionsItemSelected(item);
 	    }

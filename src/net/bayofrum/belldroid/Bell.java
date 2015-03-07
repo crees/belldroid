@@ -238,11 +238,13 @@ public class Bell extends Button {
 	public int ring(Handler bonger, int delay) {
 		switch (stroke) {
 		case HAND:
-			this.setTextColor(Color.RED);
+			this.setTextColor(Color.WHITE);
+            this.setBackgroundColor(Color.RED);
 			stroke = Stroke.BACK;
 			break;
 		case BACK:
 			this.setTextColor(Color.BLACK);
+            this.setBackgroundColor(Color.LTGRAY);
 			stroke = Stroke.HAND;
 			break;
 		}
