@@ -35,12 +35,15 @@ import java.util.ArrayList;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.util.Xml;
 
@@ -92,10 +95,13 @@ public class Method extends SQLiteOpenHelper {
 	    COLUMN_STAGE + " integer not null, " +
 		COLUMN_NOTATION + " text not null, " +
 		"dummy text);";
-	
+
+    private final Context context;
+
 	public Method(Context context) {
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
-	}
+        this.context = context;
+    }
 	
 	/**
 	 * Creates entire database, and populates with simple methods.
@@ -260,11 +266,30 @@ public class Method extends SQLiteOpenHelper {
 	}
 	
 	private class UpdateDatabaseTask extends AsyncTask <Integer, Void, Void> {
-		private ArrayList<String[]> methodarray;
-		
+		private NotificationCompat.Builder mBuilder;
+        private NotificationManager mNotificationManager;
+
+        private ArrayList<String[]> methodarray;
+
+        protected void onPreExecute() {
+            mNotificationManager =
+                    (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            mBuilder = new NotificationCompat.Builder(context);
+        }
+
 		@Override
 		protected Void doInBackground(Integer... numBells) {
-
+            String numBellsString = "";
+            for (int num : numBells) {
+                numBellsString += (numBellsString.isEmpty() ?
+                        "" : ", ") +
+                        String.valueOf(num);
+            }
+            mBuilder.setContentTitle("Updating methods...")
+                    .setContentText("Downloading from methods.ringing.org...")
+                    .setSmallIcon(android.R.drawable.stat_sys_download);
+            mBuilder.setProgress(0, 0, true);
+            mNotificationManager.notify(1, mBuilder.build());
 			SQLiteDatabase db = getWritableDatabase();
 
 			for (int num : numBells) {
@@ -327,6 +352,8 @@ public class Method extends SQLiteOpenHelper {
 								break;
 							} while (event != XmlPullParser.END_DOCUMENT);
 							Log.d("Updating for... ", method[2]);
+							mBuilder.setContentText("Updating for " + method[2]);
+							mNotificationManager.notify(1, mBuilder.build());
 							/* Get content */
 							do {
 								event = parser.next();
@@ -362,9 +389,12 @@ public class Method extends SQLiteOpenHelper {
 						e.printStackTrace();
 						break;
 					} catch (IOException e) {
-						// Not connected?  Just silently fail for now.
 						Log.w("Connection failed!", Integer.toString(num));
-						return null;
+						mBuilder.setContentText("No Internet connection detected.")
+                                .setProgress(0, 0, false)
+                                .setSmallIcon(android.R.drawable.stat_sys_warning);
+                        mNotificationManager.notify(1, mBuilder.build());
+                        return null;
 					} catch (XmlPullParserException e) {
 						e.printStackTrace();
 						break;
@@ -395,7 +425,11 @@ public class Method extends SQLiteOpenHelper {
 				}
 			}
 			db.close();
-			return null;
+            mBuilder.setContentText("Complete!")
+                    .setSmallIcon(android.R.drawable.stat_sys_download_done)
+                    .setProgress(0, 0, false);
+            mNotificationManager.notify(1, mBuilder.build());
+            return null;
 		}
 	}
 }

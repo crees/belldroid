@@ -14,5 +14,6 @@
     <string name="method_class">Method class</string>
     <string name="method">Method</string>
     <string name="peal_time_minutes">Peal time in minutes</string>
+    <string name="title_activity_help">Belldroid Help</string>
 
 </resources>
